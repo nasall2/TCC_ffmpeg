@@ -1,0 +1,7 @@
+NOTAS:
+
+AVFormatContext parece ser a estrutura que passeia entre as ferramentas do ffmpeg. Lá devem estar contidas as informações que vêm quando o programa é chamado.
+
+Procurar no programa principal quando é que as funções da biblioteca format são chamadas, da pra usar os headers que sao acessiveis no codigo principal para ter uma lista de funções.
+
+

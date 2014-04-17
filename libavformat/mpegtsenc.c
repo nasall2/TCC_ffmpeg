@@ -227,6 +227,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 #define SDT_RETRANS_TIME 500
 #define PAT_RETRANS_TIME 100
 #define PCR_RETRANS_TIME 20
+// TODO Add here the new tables retransmission rate
 
 typedef struct MpegTSWriteStream {
     struct MpegTSService *service;
@@ -486,6 +487,8 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
     return 0;
 }
 
+//TODO Add here the other tables: NIT, BAT
+
 /* NOTE: str == NULL is accepted for an empty string */
 static void putstr8(uint8_t **q_ptr, const char *str)
 {
@@ -647,7 +650,9 @@ static int mpegts_write_header(AVFormatContext *s)
             ret = AVERROR(ENOMEM);
             goto fail;
         }
-        ts_st->service = service;
+        
+	ts_st->service = service; //TODO Potential point to modify the stream's owners.
+
         /* MPEG pid values < 16 are reserved. Applications which set st->id in
          * this range are assigned a calculated pid. */
         if (st->id < 16) {
@@ -721,6 +726,7 @@ static int mpegts_write_header(AVFormatContext *s)
             (TS_PACKET_SIZE * 8 * 1000);
         ts->pat_packet_period      = (ts->mux_rate * PAT_RETRANS_TIME) /
             (TS_PACKET_SIZE * 8 * 1000);
+    //TODO Add something to new tables here.
 
         if(ts->copyts < 1)
             ts->first_pcr = av_rescale(s->max_delay, PCR_TIME_BASE, AV_TIME_BASE);
@@ -728,6 +734,7 @@ static int mpegts_write_header(AVFormatContext *s)
         /* Arbitrary values, PAT/PMT will also be written on video key frames */
         ts->sdt_packet_period = 200;
         ts->pat_packet_period = 40;
+	//TODO Add something to new tables here.
         if (pcr_st->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
             if (!pcr_st->codec->frame_size) {
                 av_log(s, AV_LOG_WARNING, "frame size not set\n");
