@@ -65,6 +65,7 @@ typedef struct MpegTSWrite {
     int pat_packet_count;
     int pat_packet_period;
     int nb_services;
+    int final_nb_services;
     int onid;
     int tsid;
     int64_t first_pcr;
@@ -99,6 +100,8 @@ static const AVOption options[] = {
       offsetof(MpegTSWrite, original_network_id), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_service_id", "Set service_id field.",
       offsetof(MpegTSWrite, service_id), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_final_nb_services", "Set desired number of services.",
+      offsetof(MpegTSWrite, final_nb_services), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0004, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_pmt_start_pid", "Set the first pid of the PMT.",
       offsetof(MpegTSWrite, pmt_start_pid), AV_OPT_TYPE_INT, {.i64 = 0x1000 }, 0x0010, 0x1f00, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_start_pid", "Set the first pid.",
@@ -487,7 +490,7 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
     return 0;
 }
 
-//TODO Add here the other tables: NIT, BAT
+//TODO Add here the other tables: NIT, BAT/SDT
 
 /* NOTE: str == NULL is accepted for an empty string */
 static void putstr8(uint8_t **q_ptr, const char *str)
@@ -610,23 +613,22 @@ static int mpegts_write_header(AVFormatContext *s)
     ts->tsid = ts->transport_stream_id;
     ts->onid = ts->original_network_id;
     /* allocate a single DVB service */
+
     title = av_dict_get(s->metadata, "service_name", NULL, 0);
     if (!title)
         title = av_dict_get(s->metadata, "title", NULL, 0);
     service_name = title ? title->value : DEFAULT_SERVICE_NAME;
     provider = av_dict_get(s->metadata, "service_provider", NULL, 0);
     provider_name = provider ? provider->value : DEFAULT_PROVIDER_NAME;
-    service = mpegts_add_service(ts, ts->service_id, provider_name, service_name);
-	
-    service->pmt.write_packet = section_write_packet;
-    service->pmt.opaque = s;
-    service->pmt.cc = 15;
 
-	service2 = mpegts_add_service(ts, ts->service_id+1, provider_name, service_name);
-	service2->pmt.write_packet = section_write_packet;
-    service2->pmt.opaque = s;
-    service2->pmt.cc = 15;
+    for(i = 0;i < ts->final_nb_services; i++) {
+	    service = mpegts_add_service(ts, ts->service_id+i, provider_name, service_name);
 	
+	    service->pmt.write_packet = section_write_packet;
+	    service->pmt.opaque = s;
+	    service->pmt.cc = 15;
+    }
+
     ts->pat.pid = PAT_PID;
     ts->pat.cc = 15; // Initialize at 15 so that it wraps and be equal to 0 for the first packet we write
     ts->pat.write_packet = section_write_packet;
@@ -656,11 +658,8 @@ static int mpegts_write_header(AVFormatContext *s)
             ret = AVERROR(ENOMEM);
             goto fail;
         }
-        
-		if(i < (s->nb_streams)/2)
-			ts_st->service = service; //TODO Potential point to modify the stream's owners.
-		else
-			ts_st->service = service2; //TODO Potential point to modify the stream's owners.
+
+	ts_st->service = ts->services[i % ts->final_nb_services] ; //TODO Potential point to modify the stream's owners.
 
         /* MPEG pid values < 16 are reserved. Applications which set st->id in
          * this range are assigned a calculated pid. */
