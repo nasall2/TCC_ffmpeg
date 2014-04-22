@@ -3,6 +3,7 @@
 *.ko
 *.obj
 *.elf
+*.d
 
 # Libraries
 *.lib
@@ -21,3 +22,24 @@
 *.i*86
 *.x86_64
 *.hex
+
+doc/*
+*.html
+*.pc
+*.swp
+
+.config
+.version
+conf_script.sh
+config.asm
+config.fate
+config.h
+config.mak
+ffmpeg
+ffmpeg_g
+ffplay
+ffplay_g
+ffprobe
+ffprobe_g
+ffserver
+ffserver_g
