@@ -330,6 +330,8 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
             break;
         }
 
+	av_log(s, AV_LOG_VERBOSE, "Stream 0x%x type is 0x%x \n", i, stream_type);
+
         if (q - data > sizeof(data) - 32)
             return AVERROR(EINVAL);
 
