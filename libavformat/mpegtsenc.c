@@ -58,6 +58,7 @@ typedef struct MpegTSService {
 typedef struct MpegTSWrite {
     const AVClass *av_class;
     MpegTSSection pat; /* MPEG2 pat table */
+    MpegTSSection nit; /* MPEG2 nit table */
     MpegTSSection sdt; /* MPEG2 sdt table context */
     MpegTSService **services;
     int sdt_packet_count;
@@ -226,6 +227,8 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 #define DEFAULT_PROVIDER_NAME   "FFmpeg"
 #define DEFAULT_SERVICE_NAME    "Service01"
 
+#define DEFAULT_NID		0x
+
 /* we retransmit the SI info at this rate */
 #define SDT_RETRANS_TIME 500
 #define PAT_RETRANS_TIME 100
@@ -260,6 +263,21 @@ static void mpegts_write_pat(AVFormatContext *s)
         put16(&q, 0xe000 | service->pmt.pid);
     }
     mpegts_write_section1(&ts->pat, PAT_TID, ts->tsid, ts->tables_version, 0, 0,
+                          data, q - data);
+}
+
+static void mpegts_write_nit(AVFormatContext *s)
+{
+    MpegTSWrite *ts = s->priv_data;
+    MpegTSService *service;
+    uint8_t data[1012], *q;
+    int i;
+
+    q = data;
+
+    
+
+    mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
 }
 

@@ -34,10 +34,12 @@
 
 /* pids */
 #define PAT_PID                 0x0000
+#define NIT_PID                 0x0010
 #define SDT_PID                 0x0011
 
 /* table ids */
 #define PAT_TID   0x00
+#define NIT_TID   0x40
 #define PMT_TID   0x02
 #define M4OD_TID  0x05
 #define SDT_TID   0x42
