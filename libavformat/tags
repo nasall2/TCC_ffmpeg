@@ -8,11 +8,12 @@ $	libavformat.a	/^$D'I5E9X"G.^6K2 F!\\#J&U(8*W+A-;0O1]3/
 .	libavformat.a	/^.$/
 .	libavformat.a	/^.$/
 @	mmsh.o	50
+@	mpegtsenc.o	73
 @W	mxfenc.o	410
 A	avio.o	13
 A	libgme.c	43
 A	movenc.o	23
-A	mpegtsenc.o	80
+A	mpegtsenc.o	87
 A	h261dec.o	96
 AC3_ID	mpeg.h	43
 ACTContext	act.c	34
@@ -680,6 +681,7 @@ D	tls.c	79
 D	udp.c	91
 Dâ	cutils.o	4
 D·B	rtpdec.o	2
+D$	mpegtsenc.o	5
 DATA_HEADER_SIZE	asfenc.c	187
 DAY	sbgdec.c	32
 DAY_TS	sbgdec.c	33
@@ -702,13 +704,14 @@ DECODER_BUFFER_SIZE	oggdec.c	40
 DECOMPRESS_BUF_SIZE	http.c	844
 DEFAULT	options_table.h	30
 DEFAULT	options_table.h	93
+DEFAULT_NID	mpegtsenc.c	232
 DEFAULT_PACKET_SIZE	mxg.c	30
-DEFAULT_PES_HEADER_FREQ	mpegtsenc.c	93
-DEFAULT_PES_PAYLOAD_SIZE	mpegtsenc.c	94
-DEFAULT_PROVIDER_NAME	mpegtsenc.c	226
+DEFAULT_PES_HEADER_FREQ	mpegtsenc.c	96
+DEFAULT_PES_PAYLOAD_SIZE	mpegtsenc.c	97
+DEFAULT_PROVIDER_NAME	mpegtsenc.c	229
 DEFAULT_REORDERING_DELAY	rtsp.c	60
 DEFAULT_SAMPLE_RATE	bethsoftvid.c	38
-DEFAULT_SERVICE_NAME	mpegtsenc.c	227
+DEFAULT_SERVICE_NAME	mpegtsenc.c	230
 DEFAULT_USER_AGENT	http.c	97
 DEFINE_CKSUM_LINE	uncodedframecrcenc.c	/^#define DEFINE_CKSUM_LINE(name, type, conv) \\$/
 DEFINE_CKSUM_LINE	uncodedframecrcenc.c	/^DEFINE_CKSUM_LINE(u8,  uint8_t, *p)$/
@@ -1470,7 +1473,7 @@ M	rtmpproto.o	149
 M	rtsp.o	14
 M	soxenc.o	60
 M	yuv4mpeg.o	42
-M4OD_TID	mpegts.h	42
+M4OD_TID	mpegts.h	44
 MAC_FORMAT_FLAG_24_BIT	ape.c	37
 MAC_FORMAT_FLAG_8_BIT	ape.c	34
 MAC_FORMAT_FLAG_CRC	ape.c	35
@@ -1950,8 +1953,8 @@ MPEGENC_CLASS	mpegenc.c	/^MPEGENC_CLASS(vcd)$/
 MPEGENC_CLASS	mpegenc.c	/^MPEGENC_CLASS(vob)$/
 MPEGENC_CLASS	mpegenc.c	/^MPEGENC_CLASS(svcd)$/
 MPEGENC_CLASS	mpegenc.c	/^MPEGENC_CLASS(dvd)$/
-MPEGTS_FLAG_AAC_LATM	mpegtsenc.c	86
-MPEGTS_FLAG_REEMIT_PAT_PMT	mpegtsenc.c	85
+MPEGTS_FLAG_AAC_LATM	mpegtsenc.c	89
+MPEGTS_FLAG_REEMIT_PAT_PMT	mpegtsenc.c	88
 MPEGTS_HEADER	mpegts.c	189
 MPEGTS_PAYLOAD	mpegts.c	192
 MPEGTS_PCR	mpegts.c	58
@@ -2049,13 +2052,13 @@ MovChannelLayout	isom.c	490
 MovChannelLayout	isom.c	493
 MovChannelLayoutMap	mov_chan.c	136
 MovChannelLayoutTag	mov_chan.c	47
-Mp4Descr	mpegts.h	87
-Mp4Descr	mpegts.h	92
+Mp4Descr	mpegts.h	89
+Mp4Descr	mpegts.h	94
 MpegDemuxContext	mpeg.c	119
 MpegDemuxContext	mpeg.c	129
 MpegMuxContext	mpegenc.c	86
 MpegTSContext	mpegts.c	107
-MpegTSContext	mpegts.h	63
+MpegTSContext	mpegts.h	65
 MpegTSFilter	mpegts.c	61
 MpegTSFilter	mpegts.c	85
 MpegTSFilterType	mpegts.c	55
@@ -2069,9 +2072,9 @@ MpegTSService	mpegtsenc.c	48
 MpegTSService	mpegtsenc.c	56
 MpegTSState	mpegts.c	188
 MpegTSWrite	mpegtsenc.c	58
-MpegTSWrite	mpegtsenc.c	90
-MpegTSWriteStream	mpegtsenc.c	235
-MpegTSWriteStream	mpegtsenc.c	247
+MpegTSWrite	mpegtsenc.c	93
+MpegTSWriteStream	mpegtsenc.c	241
+MpegTSWriteStream	mpegtsenc.c	253
 Mseek-test	seek-test.c	/^int main(int argc, char **argv)$/
 Msrtp	srtp.c	/^int main(void)$/
 MultipleDescriptor	mxf.h	37
@@ -2096,6 +2099,9 @@ NDEBUG	mpeg.c	31
 NDEBUG	mpegenc.c	36
 NDEBUG	mux.c	47
 NDEBUG	utils.c	22
+NIT_PID	mpegts.h	37
+NIT_RETRANS_TIME	mpegtsenc.c	236
+NIT_TID	mpegts.h	42
 NI_DGRAM	network.h	185
 NI_NAMERQD	network.h	177
 NI_NOFQDN	network.h	169
@@ -2653,8 +2659,8 @@ PALETTE_SIZE	wc3movie.c	63
 PALT_TAG	wc3movie.c	43
 PARAM	oggenc.c	77
 PAT_PID	mpegts.h	36
-PAT_RETRANS_TIME	mpegtsenc.c	231
-PAT_TID	mpegts.h	40
+PAT_RETRANS_TIME	mpegtsenc.c	237
+PAT_TID	mpegts.h	41
 PAUSE	rtspcodes.h	46
 PAYLOAD_HEADER_SIZE_MULTIPLE_PAYLOADS	asfenc.c	168
 PAYLOAD_HEADER_SIZE_SINGLE_PAYLOAD	asfenc.c	161
@@ -2664,7 +2670,7 @@ PCMDEF	pcmdec.c	/^#define PCMDEF(name_, long_name_, ext, codec)     /
 PCMDEF	pcmdec.c	/^PCMDEF(f64be, "PCM 64-bit floating-point big-endia/
 PCMDEF	pcmenc.c	/^#define PCMDEF(name_, long_name_, ext, codec)     /
 PCMDEF	pcmenc.c	/^PCMDEF(f64be, "PCM 64-bit floating-point big-endia/
-PCR_RETRANS_TIME	mpegtsenc.c	232
+PCR_RETRANS_TIME	mpegtsenc.c	238
 PCR_TIME_BASE	mpegtsenc.c	34
 PC__TAG	wc3movie.c	39
 PESCallback	mpegts.c	63
@@ -2687,7 +2693,7 @@ PLAY	rtspcodes.h	45
 PLAYER_KEY_OPEN_PART_LEN	rtmpproto.c	130
 PLAYPATH_MAX_LENGTH	rtmpproto.c	52
 PMPContext	pmpdec.c	33
-PMT_TID	mpegts.h	41
+PMT_TID	mpegts.h	43
 POLLERR	os_support.h	120
 POLLHUP	os_support.h	121
 POLLIN	os_support.h	111
@@ -3086,9 +3092,9 @@ SDPParseState	rtsp.c	290
 SDPParseState	rtsp.c	299
 SDP_MAX_SIZE	rtsp.c	58
 SDP_MAX_SIZE	rtspenc.c	37
-SDT_PID	mpegts.h	37
-SDT_RETRANS_TIME	mpegtsenc.c	230
-SDT_TID	mpegts.h	43
+SDT_PID	mpegts.h	38
+SDT_RETRANS_TIME	mpegtsenc.c	235
+SDT_TID	mpegts.h	45
 SEAD_TAG	electronicarts.c	35
 SEEK_TO_DATA	wtvdec.c	757
 SEEK_TO_PTS	wtvdec.c	758
@@ -3133,8 +3139,8 @@ SIZE_TAG	wc3movie.c	42
 SKIPHEADERS-$(CONFIG_FFRTMPCRYPT_PROTOCOL) +	Makefile	/^SKIPHEADERS-$(CONFIG_FFRTMPCRYPT_PROTOCOL) += rtmp/
 SKIPHEADERS-$(CONFIG_NETWORK)            +	Makefile	/^SKIPHEADERS-$(CONFIG_NETWORK)            += networ/
 SKIP_FRAME_ID	microdvddec.c	124
-SLConfigDescr	mpegts.h	70
-SLConfigDescr	mpegts.h	85
+SLConfigDescr	mpegts.h	72
+SLConfigDescr	mpegts.h	87
 SLIBOBJS-$(HAVE_GNU_WINDRES)             +	Makefile	/^SLIBOBJS-$(HAVE_GNU_WINDRES)             += avform/
 SLICE_START_CODE	mpegvideodec.c	31
 SMACKER_FLAG_RING_FRAME	smacker.c	35
@@ -3193,33 +3199,33 @@ STEAL_OPTION	tee.c	/^#define STEAL_OPTION(option, field) do {          /
 STEREO	iff.c	79
 STREAM_STARTCODE	nut.h	30
 STREAM_TYPE_AUDIO_AAC	mpeg.h	54
-STREAM_TYPE_AUDIO_AAC	mpegts.h	51
-STREAM_TYPE_AUDIO_AAC_LATM	mpegts.h	52
+STREAM_TYPE_AUDIO_AAC	mpegts.h	53
+STREAM_TYPE_AUDIO_AAC_LATM	mpegts.h	54
 STREAM_TYPE_AUDIO_AC3	mpeg.h	59
-STREAM_TYPE_AUDIO_AC3	mpegts.h	60
+STREAM_TYPE_AUDIO_AC3	mpegts.h	62
 STREAM_TYPE_AUDIO_DTS	mpeg.h	60
-STREAM_TYPE_AUDIO_DTS	mpegts.h	61
+STREAM_TYPE_AUDIO_DTS	mpegts.h	63
 STREAM_TYPE_AUDIO_MPEG1	mpeg.h	50
-STREAM_TYPE_AUDIO_MPEG1	mpegts.h	47
+STREAM_TYPE_AUDIO_MPEG1	mpegts.h	49
 STREAM_TYPE_AUDIO_MPEG2	mpeg.h	51
-STREAM_TYPE_AUDIO_MPEG2	mpegts.h	48
+STREAM_TYPE_AUDIO_MPEG2	mpegts.h	50
 STREAM_TYPE_PRIVATE_DATA	mpeg.h	53
-STREAM_TYPE_PRIVATE_DATA	mpegts.h	50
+STREAM_TYPE_PRIVATE_DATA	mpegts.h	52
 STREAM_TYPE_PRIVATE_SECTION	mpeg.h	52
-STREAM_TYPE_PRIVATE_SECTION	mpegts.h	49
+STREAM_TYPE_PRIVATE_SECTION	mpegts.h	51
 STREAM_TYPE_VIDEO_CAVS	mpeg.h	57
-STREAM_TYPE_VIDEO_CAVS	mpegts.h	56
-STREAM_TYPE_VIDEO_DIRAC	mpegts.h	58
+STREAM_TYPE_VIDEO_CAVS	mpegts.h	58
+STREAM_TYPE_VIDEO_DIRAC	mpegts.h	60
 STREAM_TYPE_VIDEO_H264	mpeg.h	56
-STREAM_TYPE_VIDEO_H264	mpegts.h	54
-STREAM_TYPE_VIDEO_HEVC	mpegts.h	55
+STREAM_TYPE_VIDEO_H264	mpegts.h	56
+STREAM_TYPE_VIDEO_HEVC	mpegts.h	57
 STREAM_TYPE_VIDEO_MPEG1	mpeg.h	48
-STREAM_TYPE_VIDEO_MPEG1	mpegts.h	45
+STREAM_TYPE_VIDEO_MPEG1	mpegts.h	47
 STREAM_TYPE_VIDEO_MPEG2	mpeg.h	49
-STREAM_TYPE_VIDEO_MPEG2	mpegts.h	46
+STREAM_TYPE_VIDEO_MPEG2	mpegts.h	48
 STREAM_TYPE_VIDEO_MPEG4	mpeg.h	55
-STREAM_TYPE_VIDEO_MPEG4	mpegts.h	53
-STREAM_TYPE_VIDEO_VC1	mpegts.h	57
+STREAM_TYPE_VIDEO_MPEG4	mpegts.h	55
+STREAM_TYPE_VIDEO_VC1	mpegts.h	59
 STRK_TAG	4xm.c	42
 STRMDATA	dtshddec.c	37
 STR_MAGIC	psxstr.c	52
@@ -3789,7 +3795,7 @@ amr_read_header	amr.c	/^static int amr_read_header(AVFormatContext *s)$/
 amr_read_packet	amr.c	/^static int amr_read_packet(AVFormatContext *s, AVP/
 amr_write_header	amr.c	/^static int amr_write_header(AVFormatContext *s)$/
 amr_write_packet	amr.c	/^static int amr_write_packet(AVFormatContext *s, AV/
-amux	mpegtsenc.c	246
+amux	mpegtsenc.c	252
 analyze	mpegts.c	/^static int analyze(const uint8_t *buf, int size, i/
 angle	bluray.c	39
 ann	sapenc.c	36
@@ -3894,10 +3900,10 @@ attr_names	rtpdec_mpeg4.c	75
 au_headers	rtpdec_mpeg4.c	56
 au_headers_allocated	rtpdec_mpeg4.c	57
 au_headers_length_bytes	rtpdec_mpeg4.c	59
-au_len	mpegts.h	80
+au_len	mpegts.h	82
 au_probe	au.c	/^static int au_probe(AVProbeData *p)$/
 au_read_header	au.c	/^static int au_read_header(AVFormatContext *s)$/
-au_seq_num_len	mpegts.h	83
+au_seq_num_len	mpegts.h	85
 au_write_header	au.c	/^static int au_write_header(AVFormatContext *s)$/
 au_write_trailer	au.c	/^static int au_write_trailer(AVFormatContext *s)$/
 aud_pts	smacker.c	74
@@ -4490,7 +4496,7 @@ callback	avio.h	/^    int (*callback)(void*);$/
 carrier	sbgdec.c	81
 cavsvideo_probe	cavsvideodec.c	/^static int cavsvideo_probe(AVProbeData *p)$/
 cc	mpegtsenc.c	43
-cc	mpegtsenc.c	238
+cc	mpegtsenc.c	244
 cdata_probe	eacdata.c	/^static int cdata_probe(AVProbeData *p)$/
 cdata_read_header	eacdata.c	/^static int cdata_read_header(AVFormatContext *s)$/
 cdata_read_packet	eacdata.c	/^static int cdata_read_packet(AVFormatContext *s, A/
@@ -4702,7 +4708,7 @@ cookies	http.c	77
 copy_default_source_addrs	rtsp.c	/^static void copy_default_source_addrs(struct RTSPS/
 copy_moof	smoothstreamingenc.c	/^static int copy_moof(AVFormatContext *s, const cha/
 copy_stream_props	concatdec.c	/^static int copy_stream_props(AVStream *st, AVStrea/
-copyts	mpegtsenc.c	88
+copyts	mpegtsenc.c	91
 correct_ts_overflow	avformat.h	1434
 count	frmdec.c	41
 count	isom.h	46
@@ -4887,8 +4893,8 @@ daud_packet	daud.c	/^static int daud_packet(AVFormatContext *s, AVPacke/
 daud_write_header	daud.c	/^static int daud_write_header(struct AVFormatContex/
 daud_write_packet	daud.c	/^static int daud_write_packet(struct AVFormatContex/
 debug	avformat.h	1337
-dec_config_descr	mpegts.h	90
-dec_config_descr_len	mpegts.h	89
+dec_config_descr	mpegts.h	92
+dec_config_descr_len	mpegts.h	91
 decode_delay	nut.h	81
 decode_frame	nutdec.c	/^static int decode_frame(NUTContext *nut, AVPacket /
 decode_frame_header	nutdec.c	/^static int decode_frame_header(NUTContext *nut, in/
@@ -4917,7 +4923,7 @@ default_quantizers	rtpdec_jpeg.c	40
 default_sample_flags	movenc.h	122
 default_size	movenc.h	123
 default_ttl	rtsp.c	293
-degr_prior_len	mpegts.h	82
+degr_prior_len	mpegts.h	84
 deint_id	rmdec.c	56
 del_tracked_method	rtmpproto.c	/^static void del_tracked_method(RTMPContext *rt, in/
 delay	flvenc.c	65
@@ -5194,7 +5200,7 @@ error	avisynth.c	84
 error	wtvdec.c	58
 error_recognition	avformat.h	1321
 es_id	mpegts.c	87
-es_id	mpegts.h	88
+es_id	mpegts.h	90
 essence_codec_ul	mxfdec.c	145
 essence_container_count	mxfenc.c	278
 essence_container_ul	mxfdec.c	144
@@ -5669,7 +5675,7 @@ ff_mpeg_video_dynamic_handler	rtpdec_mpeg12.c	67
 ff_mpegps_demuxer	mpeg.c	650
 ff_mpegts_demuxer	mpegts.c	2654
 ff_mpegts_dynamic_handler	rtpdec_mpegts.c	101
-ff_mpegts_muxer	mpegtsenc.c	1402
+ff_mpegts_muxer	mpegtsenc.c	1442
 ff_mpegts_parse_close	mpegts.c	/^void ff_mpegts_parse_close(MpegTSContext *ts)$/
 ff_mpegts_parse_open	mpegts.c	/^MpegTSContext *ff_mpegts_parse_open(AVFormatContex/
 ff_mpegts_parse_packet	mpegts.c	/^int ff_mpegts_parse_packet(MpegTSContext *ts, AVPa/
@@ -6151,7 +6157,7 @@ film_sample	segafilm.c	47
 filter_packet	tee.c	/^static int filter_packet(void *log_ctx, AVPacket */
 final	wv.h	43
 final_duration	oggparsevorbis.c	202
-final_nb_services	mpegtsenc.c	68
+final_nb_services	mpegtsenc.c	71
 final_packet_duration	oggparsespeex.c	37
 final_pts	oggparsevorbis.c	201
 finalframeblocks	ape.c	76
@@ -6196,10 +6202,10 @@ first_packet	rtpenc.h	47
 first_packet_entry	movenc.h	139
 first_packet_seq	movenc.h	138
 first_part_size	rtpdec_vp8.c	43
-first_pcr	mpegtsenc.c	71
+first_pcr	mpegtsenc.c	74
 first_pkt_pos	idcin.c	91
 first_protocol	avio.c	33
-first_pts_check	mpegtsenc.c	240
+first_pts_check	mpegtsenc.c	246
 first_rtcp_ntp_time	rtpdec.h	178
 first_rtcp_ntp_time	rtpenc.h	43
 first_sector	wtvenc.c	73
@@ -6242,7 +6248,7 @@ flags	movenc.h	93
 flags	movenc.h	157
 flags	mpegenc.c	44
 flags	mpegts.c	212
-flags	mpegtsenc.c	87
+flags	mpegtsenc.c	90
 flags	mxfenc.c	61
 flags	nut.h	64
 flags	oggdec.h	76
@@ -7083,7 +7089,7 @@ initialized	rtmphttp.c	49
 inner	cache.c	51
 input	hls.c	75
 insert_command_prefixes	mmst.c	/^static void insert_command_prefixes(MMSContext *mm/
-inst_bitrate_len	mpegts.h	81
+inst_bitrate_len	mpegts.h	83
 instance_number	mxfenc.c	295
 inter	sbgdec.c	152
 interlaced	mxfenc.c	73
@@ -7444,7 +7450,7 @@ m	concatdec.o	51
 m	concatdec.o	58
 m	nistspheredec.o	32
 m	rtpdec_vp8.o	30
-m2ts_mode	mpegtsenc.c	81
+m2ts_mode	mpegtsenc.c	84
 m4sl_cb	mpegts.c	/^static void m4sl_cb(MpegTSFilter *filter, const ui/
 mTCD_TAG	electronicarts.c	51
 m_val	omadec.c	71
@@ -7991,7 +7997,7 @@ mpegts_handle_packet	rtpdec_mpegts.c	/^static int mpegts_handle_packet(AVFormatC
 mpegts_init	rtpdec_mpegts.c	/^static av_cold int mpegts_init(AVFormatContext *ct/
 mpegts_insert_null_packet	mpegtsenc.c	/^static void mpegts_insert_null_packet(AVFormatCont/
 mpegts_insert_pcr_only	mpegtsenc.c	/^static void mpegts_insert_pcr_only(AVFormatContext/
-mpegts_muxer_class	mpegtsenc.c	133
+mpegts_muxer_class	mpegtsenc.c	136
 mpegts_new_context	rtpdec_mpegts.c	/^static PayloadContext *mpegts_new_context(void)$/
 mpegts_open_filter	mpegts.c	/^static MpegTSFilter *mpegts_open_filter(MpegTSCont/
 mpegts_open_pcr_filter	mpegts.c	/^static MpegTSFilter *mpegts_open_pcr_filter(MpegTS/
@@ -8010,6 +8016,7 @@ mpegts_set_stream_info	mpegts.c	/^static int mpegts_set_stream_info(AVStream *st
 mpegts_write_end	mpegtsenc.c	/^static int mpegts_write_end(AVFormatContext *s)$/
 mpegts_write_flush	mpegtsenc.c	/^static void mpegts_write_flush(AVFormatContext *s)/
 mpegts_write_header	mpegtsenc.c	/^static int mpegts_write_header(AVFormatContext *s)/
+mpegts_write_nit	mpegtsenc.c	/^static void mpegts_write_nit(AVFormatContext *s)$/
 mpegts_write_packet	mpegtsenc.c	/^static int mpegts_write_packet(AVFormatContext *s,/
 mpegts_write_packet_internal	mpegtsenc.c	/^static int mpegts_write_packet_internal(AVFormatCo/
 mpegts_write_pat	mpegtsenc.c	/^static void mpegts_write_pat(AVFormatContext *s)$/
@@ -8056,7 +8063,7 @@ music_emu	libgme.c	33
 must_flush	avio.h	95
 mutex	udp.c	78
 mux_rate	mpegenc.c	72
-mux_rate	mpegtsenc.c	72
+mux_rate	mpegtsenc.c	75
 mux_ts_offset	avformat.h	983
 muxer	img2enc.c	41
 muxingapp	matroskadec.c	262
@@ -8303,7 +8310,7 @@ nb_rmst	rdt.c	85
 nb_rtsp_streams	rtsp.h	222
 nb_sectors	wtvdec.c	56
 nb_segments	mxfdec.c	204
-nb_services	mpegtsenc.c	67
+nb_services	mpegtsenc.c	70
 nb_side_data	avformat.h	847
 nb_slaves	tee.c	41
 nb_sp_pairs	wtvenc.c	103
@@ -8389,6 +8396,9 @@ nframes	bethsoftvid.c	42
 nframes	bfi.c	35
 nist_probe	nistspheredec.c	/^static int nist_probe(AVProbeData *p)$/
 nist_read_header	nistspheredec.c	/^static int nist_read_header(AVFormatContext *s)$/
+nit	mpegtsenc.c	61
+nit_packet_count	mpegtsenc.c	66
+nit_packet_period	mpegtsenc.c	67
 nl16	libavformat.a	/^nl16 %d$/
 nlvl_from	isom.h	62
 nlvl_to	isom.h	62
@@ -8473,7 +8483,7 @@ oB	wtvdec.o	141
 object_type	latmenc.c	36
 objecttype	adtsenc.c	36
 objecttype	rtpdec_mpeg4.c	43
-ocr_len	mpegts.h	79
+ocr_len	mpegts.h	81
 octet_align	rtpdec_amr.c	35
 octet_count	rtpdec.h	184
 octet_count	rtpenc.h	45
@@ -8559,7 +8569,7 @@ oma_read_packet	omadec.c	/^static int oma_read_packet(AVFormatContext *s, AVP/
 oma_read_probe	omadec.c	/^static int oma_read_probe(AVProbeData *p)$/
 oma_read_seek	omadec.c	/^static int oma_read_seek(struct AVFormatContext *s/
 oma_write_header	omaenc.c	/^static av_cold int oma_write_header(AVFormatContex/
-onid	mpegtsenc.c	69
+onid	mpegtsenc.c	72
 op	mxfdec.c	212
 op1a_ul	mxfenc.c	305
 opaque	avformat.h	1559
@@ -8615,7 +8625,7 @@ options	movenc.c	50
 options	mp3dec.c	357
 options	mp3enc.c	395
 options	mpegenc.c	1167
-options	mpegtsenc.c	96
+options	mpegtsenc.c	99
 options	oggenc.c	79
 options	rtpenc.c	31
 options	segment.c	776
@@ -8638,7 +8648,7 @@ order	gxfenc.c	62
 order	mxfenc.c	72
 orig_buffer_size	avio.h	155
 original_duration	mxfdec.c	138
-original_network_id	mpegtsenc.c	76
+original_network_id	mpegtsenc.c	79
 out	hdsenc.c	52
 out	sbgdec.c	54
 out	smoothstreamingenc.c	53
@@ -8718,7 +8728,7 @@ packet_segments	asfdec.c	64
 packet_segsizetype	asfdec.c	63
 packet_seq	asfdec.c	65
 packet_seq	movenc.h	140
-packet_seq_num_len	mpegts.h	84
+packet_seq_num_len	mpegts.h	86
 packet_size	avformat.h	1197
 packet_size	avidec.c	42
 packet_size	ffm.h	52
@@ -8865,8 +8875,8 @@ partitions_count	mxfdec.c	211
 password	rtmpproto.c	124
 pat	mpegtsenc.c	60
 pat_cb	mpegts.c	/^static void pat_cb(MpegTSFilter *filter, const uin/
-pat_packet_count	mpegtsenc.c	65
-pat_packet_period	mpegtsenc.c	66
+pat_packet_count	mpegtsenc.c	68
+pat_packet_period	mpegtsenc.c	69
 path	ftp.c	49
 path	img2enc.c	38
 path	img2.h	41
@@ -8874,12 +8884,12 @@ path	isom.h	58
 path	mmst.c	91
 pattern_type	img2.h	46
 payload	asf.h	60
-payload	mpegtsenc.c	245
-payload_dts	mpegtsenc.c	243
+payload	mpegtsenc.c	251
+payload_dts	mpegtsenc.c	249
 payload_ext_ct	asf.h	59
-payload_flags	mpegtsenc.c	244
-payload_pts	mpegtsenc.c	242
-payload_size	mpegtsenc.c	239
+payload_flags	mpegtsenc.c	250
+payload_pts	mpegtsenc.c	248
+payload_size	mpegtsenc.c	245
 payload_type	rtpdec.h	150
 payload_type	rtpenc.h	31
 pb	asfenc.c	203
@@ -8907,7 +8917,7 @@ pduration	oggdec.h	68
 pes_cb	mpegts.c	67
 pes_filter	mpegts.c	92
 pes_header_size	mpegts.c	214
-pes_payload_size	mpegtsenc.c	73
+pes_payload_size	mpegtsenc.c	76
 pflags	oggdec.h	67
 pfr2_TAG	4xm.c	51
 pframes	gxfenc.c	57
@@ -8919,7 +8929,7 @@ pict_list	aiffenc.c	39
 pid	mpegts.c	86
 pid	mpegts.c	202
 pid	mpegtsenc.c	42
-pid	mpegtsenc.c	237
+pid	mpegtsenc.c	243
 pids	mpegts.c	101
 pids	mpegts.c	149
 pipe_class	file.c	74
@@ -8973,7 +8983,7 @@ pmt	mpegtsenc.c	49
 pmt_cb	mpegts.c	/^static void pmt_cb(MpegTSFilter *filter, const uin/
 pmt_found	mpegts.c	104
 pmt_pid	avformat.h	1042
-pmt_start_pid	mpegtsenc.c	79
+pmt_start_pid	mpegtsenc.c	82
 poll	os_support.h	127
 pollfd	os_support.h	104
 port	rtmphttp.c	43
@@ -9021,7 +9031,7 @@ preload	mpegenc.c	85
 preload_count	paf.c	34
 premux_packet	mpegenc.c	54
 preroll	asf.h	73
-prev_payload_key	mpegtsenc.c	241
+prev_payload_key	mpegtsenc.c	247
 prev_pictureid	rtpdec_vp8.c	45
 prev_pkt	gif.c	75
 prev_pkt	matroskadec.c	277
@@ -9439,7 +9449,7 @@ recvtime	rtpdec.h	143
 redspark_probe	redspark.c	/^static int redspark_probe(AVProbeData *p)$/
 redspark_read_header	redspark.c	/^static int redspark_read_header(AVFormatContext *s/
 redspark_read_packet	redspark.c	/^static int redspark_read_packet(AVFormatContext *s/
-reemit_pat_pmt	mpegtsenc.c	83
+reemit_pat_pmt	mpegtsenc.c	86
 ref	sbgdec.c	87
 reference	matroskadec.c	298
 reference_stream_index	segment.c	98
@@ -9811,10 +9821,10 @@ sdp_write_media_attributes	sdp.c	/^static char *sdp_write_media_attributes(char 
 sdr2_probe	sdr2.c	/^static int sdr2_probe(AVProbeData *p)$/
 sdr2_read_header	sdr2.c	/^static int sdr2_read_header(AVFormatContext *s)$/
 sdr2_read_packet	sdr2.c	/^static int sdr2_read_packet(AVFormatContext *s, AV/
-sdt	mpegtsenc.c	61
+sdt	mpegtsenc.c	62
 sdt_cb	mpegts.c	/^static void sdt_cb(MpegTSFilter *filter, const uin/
-sdt_packet_count	mpegtsenc.c	63
-sdt_packet_period	mpegtsenc.c	64
+sdt_packet_count	mpegtsenc.c	64
+sdt_packet_period	mpegtsenc.c	65
 search_hi_lo_keyframes	seek.c	/^static void search_hi_lo_keyframes(AVFormatContext/
 search_sub_ts	subtitles.c	/^static int search_sub_ts(const FFDemuxSubtitlesQue/
 searched_for_end	flvdec.c	56
@@ -9937,9 +9947,9 @@ server_data_port	ftp.c	45
 server_port_max	rtsp.h	104
 server_port_min	rtsp.h	104
 server_type	rtsp.h	266
-service	mpegtsenc.c	236
-service_id	mpegtsenc.c	77
-services	mpegtsenc.c	62
+service	mpegtsenc.c	242
+service_id	mpegtsenc.c	80
+services	mpegtsenc.c	63
 session	libssh.c	33
 session	tls.c	64
 session_id	rtsp.h	147
@@ -10029,7 +10039,7 @@ skip_to_timecode	matroskadec.c	283
 skip_until_key_frame	nut.h	75
 skiphdr	sierravmd.c	60
 sl	mpegts.c	220
-sl	mpegts.h	91
+sl	mpegts.h	93
 slave_bsfs_spec_sep	tee.c	49
 slave_delim	tee.c	45
 slave_opt_close	tee.c	47
@@ -10184,7 +10194,7 @@ start_number_range	img2.h	52
 start_offset	paf.c	33
 start_pad	isom.h	142
 start_pad	mp3dec.c	46
-start_pid	mpegtsenc.c	80
+start_pid	mpegtsenc.c	83
 start_pos	smoothstreamingenc.c	45
 start_position	mxfdec.c	106
 start_pts	hlsenc.c	51
@@ -10411,7 +10421,7 @@ table_0_header_time	wtvenc.c	48
 table_0_redirector_legacy_attrib	wtvenc.c	46
 table_entries	nsvdec.c	91
 table_entries_used	nsvdec.c	92
-tables_version	mpegtsenc.c	89
+tables_version	mpegtsenc.c	92
 taboffset	hnm.c	45
 tag	id3v2.h	56
 tag	internal.h	41
@@ -10544,8 +10554,8 @@ timestamp	rtpdec_svq3.c	38
 timestamp	rtpdec_vp8.c	36
 timestamp	rtpdec_xiph.c	45
 timestamp	rtpenc.h	35
-timestamp_len	mpegts.h	78
-timestamp_res	mpegts.h	77
+timestamp_len	mpegts.h	80
+timestamp_res	mpegts.h	79
 title	matroskadec.c	199
 title	matroskadec.c	261
 tls	rtmphttp.c	52
@@ -10599,7 +10609,7 @@ transparency	iff.c	108
 transport	rtsp.h	117
 transport	rtsp.h	257
 transport_priv	rtsp.h	430
-transport_stream_id	mpegtsenc.c	75
+transport_stream_id	mpegtsenc.c	78
 transports	rtsp.h	141
 treesize	smacker.c	53
 tref_id	movenc.h	111
@@ -10632,7 +10642,7 @@ ts_per_packet	libmodplug.c	50
 ts_str	seek-test.c	/^static void ts_str(char buffer[60], int64_t ts, AV/
 ts_trans	sbgdec.c	100
 tseq	sbgdec.c	108
-tsid	mpegtsenc.c	70
+tsid	mpegtsenc.c	73
 tta_check_crc	tta.c	/^static unsigned long tta_check_crc(unsigned long c/
 tta_probe	tta.c	/^static int tta_probe(AVProbeData *p)$/
 tta_read_header	tta.c	/^static int tta_read_header(AVFormatContext *s)$/
@@ -10786,17 +10796,17 @@ urlcontext_child_class_next	avio.c	/^static const AVClass *urlcontext_child_clas
 urlcontext_child_next	avio.c	/^static void *urlcontext_child_next(void *obj, void/
 urlcontext_to_name	avio.c	/^static const char *urlcontext_to_name(void *ptr)$/
 use_absolute_path	isom.h	165
-use_au_end	mpegts.h	72
-use_au_start	mpegts.h	71
+use_au_end	mpegts.h	74
+use_au_start	mpegts.h	73
 use_editlist	movenc.h	172
 use_glob	img2.h	47
-use_idle	mpegts.h	76
+use_idle	mpegts.h	78
 use_odml	avidec.c	78
-use_padding	mpegts.h	74
+use_padding	mpegts.h	76
 use_preamble	spdifenc.c	68
-use_rand_acc_pt	mpegts.h	73
+use_rand_acc_pt	mpegts.h	75
 use_strftime	img2enc.c	40
-use_timestamps	mpegts.h	75
+use_timestamps	mpegts.h	77
 use_wallclock_as_timestamps	avformat.h	1394
 user	sdp.c	49
 user_agent	hls.c	114
