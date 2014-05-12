@@ -1,7 +1,9 @@
-BUILD_DIREC="$HOME/ffmpeg_build/"
+START_DIR=$HOME/ffmpeg_dirty
+BUILD_DIREC="$START_DIR/ffmpeg_build"
+PATH="$PATH:$START_DIR/bin"
 export BUILD_DIREC
 PKG_CONFIG_PATH="$BUILD_DIREC/lib/pkgconfig"
-BIN_DIREC="$HOME/bin0605"
+BIN_DIREC="$HOME/ffmpeg_dirty/bin"
 export PKG_CONFIG_PATH
 export BIN_DIREC
 
