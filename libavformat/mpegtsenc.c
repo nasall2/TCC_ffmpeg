@@ -228,6 +228,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 
 #define DEFAULT_PROVIDER_NAME   "FFmpeg"
 #define DEFAULT_SERVICE_NAME    "Service01"
+#define DEFAULT_NETWORK_NAME    "LaPSi TV"
 
 #define DEFAULT_NID		0x0640	// 1600d
 
@@ -271,15 +272,40 @@ static void mpegts_write_pat(AVFormatContext *s)
 
 static void mpegts_write_nit(AVFormatContext *s)
 {
-    MpegTSWrite *ts = s->priv_data;
-    uint8_t data[1012], *q;
+	MpegTSWrite *ts = s->priv_data;
+	uint8_t data[1012], *q;
+	int i;
+	char *network_name;
 
-    q = data;
+	q = data;
+	
+	desc_len_ptr = q;
+        q++;
+        q++;
 
-    put16(&q, 0xf000 | 0x000); //Network descriptors length 0. No network descriptors yet.
-    put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
 
-    mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
+	//Network Name Descriptor
+	network_name = DEFAULT_NETWORK_NAME;
+	av_log(s, AV_LOG_VERBOSE, "DEF_NW_NAME:%s\n", network_name);
+
+	*q++ = 0x40; //tag
+	*q++ = 0x08; //length
+	for(i=0; i<sizeof(network_name); i++)
+		*q++ = network_name[i]; //data
+
+	av_log(s, AV_LOG_VERBOSE, "sizeof(q): %d \t sizeof(desc_len_ptr): %d \t calculated length:%d\n", sizeof(q), sizeof(desc_len_ptr), q - desc_len_ptr);
+	*desc_len_ptr++ = 0xF0;
+	*desc_len_ptr++ = q - desc_len_ptr;
+	
+	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
+	
+
+
+	put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
+
+	*q++ = 0xff;
+
+	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
 }
 
@@ -315,6 +341,7 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
         switch(st->codec->codec_id) {
         case AV_CODEC_ID_MPEG1VIDEO:
         case AV_CODEC_ID_MPEG2VIDEO:
+            stream_type = STREAM_TYPE_VIDEO_MPEG2;
             stream_type = STREAM_TYPE_VIDEO_MPEG2;
             break;
         case AV_CODEC_ID_MPEG4:
