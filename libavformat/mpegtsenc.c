@@ -273,7 +273,7 @@ static void mpegts_write_pat(AVFormatContext *s)
 static void mpegts_write_nit(AVFormatContext *s)
 {
 	MpegTSWrite *ts = s->priv_data;
-	uint8_t data[1012], *q;
+	uint8_t data[1012], *q, *desc_len_ptr;
 	int i;
 	char *network_name;
 
@@ -293,17 +293,13 @@ static void mpegts_write_nit(AVFormatContext *s)
 	for(i=0; i<sizeof(network_name); i++)
 		*q++ = network_name[i]; //data
 
-	av_log(s, AV_LOG_VERBOSE, "sizeof(q): %d \t sizeof(desc_len_ptr): %d \t calculated length:%d\n", sizeof(q), sizeof(desc_len_ptr), q - desc_len_ptr);
-	*desc_len_ptr++ = 0xF0;
-	*desc_len_ptr++ = q - desc_len_ptr;
+	av_log(s, AV_LOG_VERBOSE, "calculated length:%x \n", q - desc_len_ptr - 2);
+	*desc_len_ptr = 0xF0;
+	*(desc_len_ptr + 1) = q - desc_len_ptr - 2; //TODO melhorar essa porquice!
 	
 	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
-	
-
 
 	put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
-
-	*q++ = 0xff;
 
 	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
