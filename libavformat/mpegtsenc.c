@@ -274,28 +274,29 @@ static void mpegts_write_nit(AVFormatContext *s)
 {
 	MpegTSWrite *ts = s->priv_data;
 	uint8_t data[1012], *q, *desc_len_ptr;
-	int i;
+	int i, temp_val;
 	char *network_name;
 
 	q = data;
 	
 	desc_len_ptr = q;
-        q++;
-        q++;
-
+        q += 2;
 
 	//Network Name Descriptor
 	network_name = DEFAULT_NETWORK_NAME;
-	av_log(s, AV_LOG_VERBOSE, "DEF_NW_NAME:%s\n", network_name);
-
 	*q++ = 0x40; //tag
 	*q++ = 0x08; //length
 	for(i=0; i<sizeof(network_name); i++)
 		*q++ = network_name[i]; //data
 
-	av_log(s, AV_LOG_VERBOSE, "calculated length:%x \n", q - desc_len_ptr - 2);
-	*desc_len_ptr = 0xF0;
-	*(desc_len_ptr + 1) = q - desc_len_ptr - 2; //TODO melhorar essa porquice!
+	//Other Descriptors
+	//...
+	//...
+
+	temp_val = 0xF000 | (q - desc_len_ptr - 2);
+	av_log(s, AV_LOG_VERBOSE, "calculated length:%d \n", temp_val);
+	desc_len_ptr[0] = temp_val >> 8;
+	desc_len_ptr[1] = temp_val;
 	
 	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
 
