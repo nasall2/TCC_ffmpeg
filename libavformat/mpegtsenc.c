@@ -228,7 +228,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 
 #define DEFAULT_PROVIDER_NAME   "FFmpeg"
 #define DEFAULT_SERVICE_NAME    "Service01"
-#define DEFAULT_NETWORK_NAME    "LaPSi TV"
+#define DEFAULT_NETWORK_NAME    "LaPSI TV - UFRGS"
 
 #define DEFAULT_NID		0x0640	// 1600d
 
@@ -267,42 +267,6 @@ static void mpegts_write_pat(AVFormatContext *s)
         put16(&q, 0xe000 | service->pmt.pid);
     }
     mpegts_write_section1(&ts->pat, PAT_TID, ts->tsid, ts->tables_version, 0, 0,
-                          data, q - data);
-}
-
-static void mpegts_write_nit(AVFormatContext *s)
-{
-	MpegTSWrite *ts = s->priv_data;
-	uint8_t data[1012], *q, *desc_len_ptr;
-	int i, temp_val;
-	char *network_name;
-
-	q = data;
-	
-	desc_len_ptr = q;
-        q += 2;
-
-	//Network Name Descriptor
-	network_name = DEFAULT_NETWORK_NAME;
-	*q++ = 0x40; //tag
-	*q++ = 0x08; //length
-	for(i=0; i<sizeof(network_name); i++)
-		*q++ = network_name[i]; //data
-
-	//Other Descriptors
-	//...
-	//...
-
-	temp_val = 0xF000 | (q - desc_len_ptr - 2);
-	av_log(s, AV_LOG_VERBOSE, "calculated length:%d %d \n", temp_val, (q - desc_len_ptr - 2));
-	desc_len_ptr[0] = temp_val >> 8;
-	desc_len_ptr[1] = temp_val;
-	
-	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
-
-	put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
-
-	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
 }
 
@@ -599,6 +563,38 @@ static void mpegts_write_sdt(AVFormatContext *s)
         desc_list_len_ptr[1] = val;
     }
     mpegts_write_section1(&ts->sdt, SDT_TID, ts->tsid, ts->tables_version, 0, 0,
+                          data, q - data);
+}
+
+static void mpegts_write_nit(AVFormatContext *s)
+{
+	MpegTSWrite *ts = s->priv_data;
+	uint8_t data[1012], *q, *desc_len_ptr;
+	int i, temp_val;
+
+	q = data;
+	
+	desc_len_ptr = q;
+        q += 2;
+
+	//Network Name Descriptor
+	*q++ = 0x40; //tag
+        putstr8(&q, DEFAULT_NETWORK_NAME);
+
+	//Other Descriptors
+	//...
+	//...
+
+	temp_val = 0xF0 << 8 | (q - desc_len_ptr - 2);
+	av_log(s, AV_LOG_VERBOSE, "calculated length: %x %x %d \n", desc_len_ptr[0], desc_len_ptr[1], (q - desc_len_ptr - 2));
+	desc_len_ptr[0] = temp_val >> 8;
+	desc_len_ptr[1] = temp_val;
+	
+	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
+
+	put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
+
+	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
 }
 
