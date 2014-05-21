@@ -294,7 +294,7 @@ static void mpegts_write_nit(AVFormatContext *s)
 	//...
 
 	temp_val = 0xF000 | (q - desc_len_ptr - 2);
-	av_log(s, AV_LOG_VERBOSE, "calculated length:%d \n", temp_val);
+	av_log(s, AV_LOG_VERBOSE, "calculated length:%d %d \n", temp_val, (q - desc_len_ptr - 2));
 	desc_len_ptr[0] = temp_val >> 8;
 	desc_len_ptr[1] = temp_val;
 	
