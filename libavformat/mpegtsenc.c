@@ -569,8 +569,9 @@ static void mpegts_write_sdt(AVFormatContext *s)
 static void mpegts_write_nit(AVFormatContext *s)
 {
 	MpegTSWrite *ts = s->priv_data;
-	uint8_t data[1012], *q, *desc_len_ptr;
-	int i, temp_val;
+	uint8_t data[1012], *q, *desc_len_ptr, *ts_loop_len_ptr, *transp_desc_len_ptr;
+	uint8_t *ts_info_desc_length_ptr, *service_list_desc_length_ptr, *part_rec_desc_length_ptr, *sys_mgmt_desc_length_ptr;
+	int i, temp_val, ts_loop_length_val, transp_desc_len_val;
 
 	q = data;
 	
@@ -581,19 +582,113 @@ static void mpegts_write_nit(AVFormatContext *s)
 	*q++ = 0x40; //tag
         putstr8(&q, DEFAULT_NETWORK_NAME);
 
+	// System Management Descriptor
+	*q++ = 0xFE; //tag
+	sys_mgmt_desc_length_ptr = q;
+	*q++; //length, filled later
+	*q++ = 0x03; //Bcast flag '00' Open TV, Bcast ID: '000011'
+	*q++ = 0x01; //Read from RBS1905.ts
+
+	//Fill  descriptor length
+	sys_mgmt_desc_length_ptr[0] = q - sys_mgmt_desc_length_ptr - 1;
+
 	//Other Descriptors
 	//...
 	//...
-
+	
+	//Fill the descriptors length field
 	temp_val = 0xF0 << 8 | (q - desc_len_ptr - 2);
-	av_log(s, AV_LOG_VERBOSE, "calculated length: %x %x %d \n", desc_len_ptr[0], desc_len_ptr[1], (q - desc_len_ptr - 2));
+	//av_log(s, AV_LOG_VERBOSE, "calculated length: %x %x %d \n", desc_len_ptr[0], desc_len_ptr[1], (q - desc_len_ptr - 2));
 	desc_len_ptr[0] = temp_val >> 8;
 	desc_len_ptr[1] = temp_val;
+
+	//Begin of TS loop descriptors
+	ts_loop_len_ptr = q;
+	q +=2;
+
+	//TS ID, 16bits
+	put16(&q, 0x1234);
+
+	//Original Network ID, 16bits
+	put16(&q, 0x5678);
 	
-	//put16(&desc_len_ptr, 0xf000 | q - desc_len_ptr);
+	//Begin of transport descriptors
+	transp_desc_len_ptr = q;
+	q +=2;
 
-	put16(&q, 0xf000 | 0x000); //Transport stream loop length 0. No loops yet. BTW, what arre these?
+	//First Descriptor
+	//TS Information Descriptor
+	*q++ = 0xCD; //tag
+	ts_info_desc_length_ptr = q;
+	*q++; //length, filled later
+	*q++ = 0x01; //remote control key id
+	//length of ts name string, 6 bits | transmission type count, 2 bits
+	*q++ = strlen(DEFAULT_NETWORK_NAME) << 2 | 0x2;
+	memcpy(q, DEFAULT_NETWORK_NAME, strlen(DEFAULT_NETWORK_NAME));
+	q += strlen(DEFAULT_NETWORK_NAME);
 
+	//transmission type info loop, up to 4 transmission types
+	*q++ = 0x0F; //transmission type: 0x0F: A, 0xAF: C
+	*q++ = 0x01; //number of services of this transm. type
+	put16(&q, 0xC9C0);//service_ID
+	
+	*q++ = 0xAF; //transmission type: 0x0F: A, 0xAF: C
+	*q++ = 0x01; //number of services of this transm. type
+	put16(&q, 0xC9D8);//service_ID
+
+	//Fill TS info descriptor length
+	ts_info_desc_length_ptr[0] = q - ts_info_desc_length_ptr - 1;
+	
+	//Service List Descriptor
+	*q++ = 0x41; //tag
+	service_list_desc_length_ptr = q;
+	*q++; //length, filled later
+	put16(&q, 0xC9C0);//service_ID
+	*q++ = 0x01; //service type 0x01 for Digital TV Service
+	put16(&q, 0xC9D8);//service_ID
+	*q++ = 0x01; //service type 0x01 for Digital TV Service
+
+	//Fill Service list descriptor length
+	service_list_desc_length_ptr[0] = q - service_list_desc_length_ptr - 1;
+	
+	// Partial Reception Descriptor
+	*q++ = 0xFB; //tag
+	part_rec_desc_length_ptr = q;
+	*q++; //length, filled later
+	put16(&q, 0xC9D8);//
+
+	//Fill  descriptor length
+	part_rec_desc_length_ptr[0] = q - part_rec_desc_length_ptr - 1;
+	
+
+	//// Descriptor
+	//*q++ = 0x41; //tag
+	//_length_ptr = q;
+	//*q++; //length, filled later
+	//put16(&q, 0x);//
+	//*q++ = 0x; //
+
+	////Fill  descriptor length
+	//_length_ptr[0] = q - _length_ptr - 1;
+
+
+
+	//Fill the Transport descriptors length field first
+	transp_desc_len_val = 0xF0 << 8 | (q - transp_desc_len_ptr - 2);
+
+	transp_desc_len_ptr[0] = transp_desc_len_val >> 8;
+	transp_desc_len_ptr[1] = transp_desc_len_val;
+
+
+	//Fill the TS loop length field after, for it contains the Transp. descriptors
+	ts_loop_length_val = 0xF0 << 8 | (q - ts_loop_len_ptr - 2);
+
+	ts_loop_len_ptr[0] = ts_loop_length_val >> 8;
+	ts_loop_len_ptr[1] = ts_loop_length_val;
+
+	
+	
+	//Write the table
 	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
                           data, q - data);
 }
