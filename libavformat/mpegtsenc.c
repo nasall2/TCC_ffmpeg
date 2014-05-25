@@ -247,6 +247,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 #define DEFAULT_PROVIDER_NAME   "FFmpeg"
 #define DEFAULT_SERVICE_NAME    "Service01"
 #define DEFAULT_NETWORK_NAME    "LaPSI TV - UFRGS"
+#define DEFAULT_COUNTRY_CODE    "BRA"
 
 #define DEFAULT_NID		0x0640	// 1600d
 
@@ -285,6 +286,23 @@ typedef enum {
 	UNDEFINED
 } transmission_mode_t;
 
+/* NOTE: str == NULL is accepted for an empty string */
+static void putstr8(uint8_t **q_ptr, const char *str)
+{
+    uint8_t *q;
+    int len;
+
+    q = *q_ptr;
+    if (!str)
+        len = 0;
+    else
+        len = strlen(str);
+    *q++ = len;
+    memcpy(q, str, len);
+    q += len;
+    *q_ptr = q;
+}
+
 static void mpegts_write_pat(AVFormatContext *s)
 {
     MpegTSWrite *ts = s->priv_data;
@@ -305,7 +323,7 @@ static void mpegts_write_pat(AVFormatContext *s)
 static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
 {
     MpegTSWrite *ts = s->priv_data;
-    uint8_t data[1012], *q, *desc_length_ptr, *program_info_length_ptr;
+    uint8_t data[1012], *q, *desc_length_ptr, *program_info_length_ptr, *parental_rating_length_ptr;
     int val, stream_type, i;
 
     q = data;
@@ -314,7 +332,22 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
     program_info_length_ptr = q;
     q += 2; /* patched after */
 
-    /* put program info here */
+	// Parental Rating Descriptor
+	*q++ = 0x55; //tag
+	parental_rating_length_ptr = q;
+	*q++; //length, filled later
+    //putstr8(&q, DEFAULT_COUNTRY_CODE);
+	//country code with 3 chars, default is BRA
+	*q++ = 'B';
+	*q++ = 'R';
+	*q++ = 'A';
+	
+	*q++ = 0x01; // RSV 1b | SEX 1b | VIOLENCE 1b | DRUGS 1b | RATING 4b
+
+	//Fill  descriptor length
+	parental_rating_length_ptr[0] = q - parental_rating_length_ptr - 1;
+
+    /* put other program info here */
 
     val = 0xf000 | (q - program_info_length_ptr - 2);
     program_info_length_ptr[0] = val >> 8;
@@ -369,8 +402,7 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
             stream_type = STREAM_TYPE_PRIVATE_DATA;
             break;
         }
-
-	av_log(s, AV_LOG_VERBOSE, "Stream 0x%x type is 0x%x \n", i, stream_type);
+	av_log(s, AV_LOG_VERBOSE, "====Stream 0x%x type is 0x%x \n", i, stream_type);
 
         if (q - data > sizeof(data) - 32)
             return AVERROR(EINVAL);
@@ -387,6 +419,12 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
                 *q++=0x7a; // EAC3 descriptor see A038 DVB SI
                 *q++=1; // 1 byte, all flags sets to 0
                 *q++=0; // omit all fields...
+            }
+            if( st->codec->codec_id == AV_CODEC_ID_AAC_LATM ){
+                *q++=0x7C; // AAC descriptor tag, see ABNT NBR15608
+                *q++=0x2; // 2 bytes long, one for profile/level info and another for additional info flag set to zero
+                *q++=0x2E; // Profile HE-AACv2, level 4
+                *q++=0x00; // MSB is AAC_type_flag, set to zero. Others are reserved.
             }
             if(st->codec->codec_id==AV_CODEC_ID_S302M){
                 *q++ = 0x05; /* MPEG-2 registration descriptor*/
@@ -543,22 +581,6 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
 
 //TODO Add here the other tables: NIT, BAT/SDT
 
-/* NOTE: str == NULL is accepted for an empty string */
-static void putstr8(uint8_t **q_ptr, const char *str)
-{
-    uint8_t *q;
-    int len;
-
-    q = *q_ptr;
-    if (!str)
-        len = 0;
-    else
-        len = strlen(str);
-    *q++ = len;
-    memcpy(q, str, len);
-    q += len;
-    *q_ptr = q;
-}
 
 static void mpegts_write_sdt(AVFormatContext *s)
 {
@@ -604,8 +626,6 @@ static void mpegts_write_nit(AVFormatContext *s)
 	uint8_t data[1012], *q, *desc_len_ptr, *ts_loop_len_ptr, *transp_desc_len_ptr;
 	uint8_t *ts_info_desc_length_ptr, *service_list_desc_length_ptr, *part_rec_desc_length_ptr, *sys_mgmt_desc_length_ptr, *terr_del_sys_desc_length_ptr;
 	int i, temp_val, ts_loop_length_val, transp_desc_len_val;
-	guard_interval_t guard_interval;
-	transmission_mode_t transmission_mode;
 
 	q = data;
 	
@@ -683,9 +703,10 @@ static void mpegts_write_nit(AVFormatContext *s)
 					put16(&q, ts->services[i]->sid);//service_ID
 				}
 			}
+		break;
 		case 2:
-
-	break;
+			
+		break;
 	}
 
 	//Fill TS info descriptor length
@@ -858,9 +879,9 @@ static int mpegts_write_header(AVFormatContext *s)
 		service->pmt.cc = 15;
 
 		ts->final_nb_services = 2;
-
+	break;
 	case 2:
-
+		
 	break;
 }
 
