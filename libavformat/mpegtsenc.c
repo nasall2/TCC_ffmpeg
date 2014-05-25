@@ -69,6 +69,12 @@ typedef struct MpegTSWrite {
     int pat_packet_period;
     int nb_services;
     int final_nb_services;
+    int area_code;
+    int guard_interval;
+    int transmission_mode;
+    int physical_channel;
+    int virtual_channel;
+    int transmission_profile;
     int onid;
     int tsid;
     int64_t first_pcr;
@@ -105,6 +111,18 @@ static const AVOption options[] = {
       offsetof(MpegTSWrite, service_id), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_final_nb_services", "Set desired number of services.",
       offsetof(MpegTSWrite, final_nb_services), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0004, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_area_code", "Set area_code field.",
+      offsetof(MpegTSWrite, area_code), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0DBF, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_guard_interval", "Set guard_interval  field.",
+      offsetof(MpegTSWrite, guard_interval), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0004, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_transmission_mode", "Set transmission_mode field.",
+      offsetof(MpegTSWrite, transmission_mode), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0004, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_physical_channel", "Set physical_channel field.",
+      offsetof(MpegTSWrite, physical_channel), AV_OPT_TYPE_INT, {.i64 = 0x0014 }, 0x000E, 0x0045, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_virtual_channel", "Set virtual_channel field.",
+      offsetof(MpegTSWrite, virtual_channel), AV_OPT_TYPE_INT, {.i64 = 0x0014 }, 0x0001, 0x0D45, AV_OPT_FLAG_ENCODING_PARAM},
+    { "mpegts_transmission_profile", "Set transmission_profile field.",
+      offsetof(MpegTSWrite, transmission_profile), AV_OPT_TYPE_INT, {.i64 = 0x0001 }, 0x0001, 0x0002, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_pmt_start_pid", "Set the first pid of the PMT.",
       offsetof(MpegTSWrite, pmt_start_pid), AV_OPT_TYPE_INT, {.i64 = 0x1000 }, 0x0010, 0x1f00, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_start_pid", "Set the first pid.",
@@ -252,6 +270,20 @@ typedef struct MpegTSWriteStream {
     uint8_t *payload;
     AVFormatContext *amux;
 } MpegTSWriteStream;
+
+typedef enum {
+	GI1_32,
+	GI1_16,
+	GI1_8,
+	GI1_4
+} guard_interval_t;
+
+typedef enum {
+	MODE1,
+	MODE2,
+	MODE3,
+	UNDEFINED
+} transmission_mode_t;
 
 static void mpegts_write_pat(AVFormatContext *s)
 {
@@ -570,8 +602,10 @@ static void mpegts_write_nit(AVFormatContext *s)
 {
 	MpegTSWrite *ts = s->priv_data;
 	uint8_t data[1012], *q, *desc_len_ptr, *ts_loop_len_ptr, *transp_desc_len_ptr;
-	uint8_t *ts_info_desc_length_ptr, *service_list_desc_length_ptr, *part_rec_desc_length_ptr, *sys_mgmt_desc_length_ptr;
+	uint8_t *ts_info_desc_length_ptr, *service_list_desc_length_ptr, *part_rec_desc_length_ptr, *sys_mgmt_desc_length_ptr, *terr_del_sys_desc_length_ptr;
 	int i, temp_val, ts_loop_length_val, transp_desc_len_val;
+	guard_interval_t guard_interval;
+	transmission_mode_t transmission_mode;
 
 	q = data;
 	
@@ -580,7 +614,7 @@ static void mpegts_write_nit(AVFormatContext *s)
 
 	//Network Name Descriptor
 	*q++ = 0x40; //tag
-        putstr8(&q, DEFAULT_NETWORK_NAME);
+        putstr8(&q, DEFAULT_NETWORK_NAME); //length and name string
 
 	// System Management Descriptor
 	*q++ = 0xFE; //tag
@@ -607,10 +641,10 @@ static void mpegts_write_nit(AVFormatContext *s)
 	q +=2;
 
 	//TS ID, 16bits
-	put16(&q, 0x1234);
+	put16(&q, ts->tsid);
 
 	//Original Network ID, 16bits
-	put16(&q, 0x5678);
+	put16(&q, ts->onid);
 	
 	//Begin of transport descriptors
 	transp_desc_len_ptr = q;
@@ -621,20 +655,38 @@ static void mpegts_write_nit(AVFormatContext *s)
 	*q++ = 0xCD; //tag
 	ts_info_desc_length_ptr = q;
 	*q++; //length, filled later
-	*q++ = 0x01; //remote control key id
+	*q++ = ts->virtual_channel; //remote control key id
+	av_log(s, AV_LOG_VERBOSE, "==== virtual channel : %d physical channel %d \n", ts->virtual_channel, ts->physical_channel);
 	//length of ts name string, 6 bits | transmission type count, 2 bits
 	*q++ = strlen(DEFAULT_NETWORK_NAME) << 2 | 0x2;
 	memcpy(q, DEFAULT_NETWORK_NAME, strlen(DEFAULT_NETWORK_NAME));
 	q += strlen(DEFAULT_NETWORK_NAME);
 
-	//transmission type info loop, up to 4 transmission types
-	*q++ = 0x0F; //transmission type: 0x0F: A, 0xAF: C
-	*q++ = 0x01; //number of services of this transm. type
-	put16(&q, 0xC9C0);//service_ID
-	
-	*q++ = 0xAF; //transmission type: 0x0F: A, 0xAF: C
-	*q++ = 0x01; //number of services of this transm. type
-	put16(&q, 0xC9D8);//service_ID
+	switch (ts->transmission_profile) {
+		case 1:
+		default:
+			for(i = 0; i < ts->nb_services; i++) {
+				av_log(s, AV_LOG_VERBOSE, "==== service test fields: %x NW_ID:%x SVC_TYPE:%x PGM_NB:%x \n",
+					ts->services[i]->sid,
+					(( ts->services[i]->sid & 0xFFE0 ) >> 5 ),
+					(( ts->services[i]->sid & 0x18 ) >> 3 ),
+					(ts->services[i]->sid & 0x7 )
+				);
+				if( (ts->services[i]->sid & 0x18 >> 3 )) {//if true, is a 1-seg service
+					*q++ = 0xAF; //transmission type: 0xAF: C
+					*q++ = 0x01; //number of services of this transm. type
+					put16(&q, ts->services[i]->sid);//service_ID
+				}
+				else {
+					*q++ = 0x0F; //transmission type: 0x0F: A
+					*q++ = 0x01; //number of services of this transm. type
+					put16(&q, ts->services[i]->sid);//service_ID
+				}
+			}
+		case 2:
+
+	break;
+	}
 
 	//Fill TS info descriptor length
 	ts_info_desc_length_ptr[0] = q - ts_info_desc_length_ptr - 1;
@@ -643,23 +695,38 @@ static void mpegts_write_nit(AVFormatContext *s)
 	*q++ = 0x41; //tag
 	service_list_desc_length_ptr = q;
 	*q++; //length, filled later
-	put16(&q, 0xC9C0);//service_ID
-	*q++ = 0x01; //service type 0x01 for Digital TV Service
-	put16(&q, 0xC9D8);//service_ID
-	*q++ = 0x01; //service type 0x01 for Digital TV Service
+
+	for(i = 0; i < ts->nb_services; i++) {
+		put16(&q, ts->services[i]->sid);//service_ID
+		*q++ = 0x01; //service type 0x01 for Digital TV Service
+	}
 
 	//Fill Service list descriptor length
 	service_list_desc_length_ptr[0] = q - service_list_desc_length_ptr - 1;
-	
-	// Partial Reception Descriptor
-	*q++ = 0xFB; //tag
-	part_rec_desc_length_ptr = q;
-	*q++; //length, filled later
-	put16(&q, 0xC9D8);//
 
-	//Fill  descriptor length
-	part_rec_desc_length_ptr[0] = q - part_rec_desc_length_ptr - 1;
-	
+	for(i = 0; i < ts->nb_services; i++)
+		if( (ts->services[i]->sid & 0x18 >> 3 ) == 0x3 ) {//if true, is a 1-seg service
+			av_log(s, AV_LOG_VERBOSE, "1-seg Service detected, creating partial reception desriptor.\n", ts->nb_services, ts->final_nb_services);
+			// Partial Reception Descriptor
+			*q++ = 0xFB; //tag
+			part_rec_desc_length_ptr = q;
+			*q++; //length, filled later
+			put16(&q, ts->services[i]->sid);
+			//Fill  descriptor length
+			part_rec_desc_length_ptr[0] = q - part_rec_desc_length_ptr - 1;
+		}
+
+	//// Terrestrial System Delivery Descriptor
+	*q++ = 0xFA; //tag
+	terr_del_sys_desc_length_ptr = q;
+	*q++; //length, filled later
+	put16(&q, ts->area_code << 4 | ts->guard_interval << 2 | ts->transmission_mode );// Area code | Guard interval | Transmission mode
+	put16(&q,  ( 473 + 6 * ( ts->physical_channel - 14 ) +1/7 ) * 7 );// Frequency field: ( 473 + 6 * ( CH - 14 ) +1/7 ) * 7
+	//*q++ = 0x; //
+
+	////Fill  descriptor length
+	terr_del_sys_desc_length_ptr[0] = q - terr_del_sys_desc_length_ptr - 1;
+
 
 	//// Descriptor
 	//*q++ = 0x41; //tag
@@ -749,6 +816,7 @@ static int mpegts_write_header(AVFormatContext *s)
     const char *provider_name;
     int *pids;
     int ret;
+	int calculated_HD_service_ID, calculated_LD_service_ID;
 
     if (s->max_delay < 0) /* Not set by the caller */
         s->max_delay = 0;
@@ -756,9 +824,10 @@ static int mpegts_write_header(AVFormatContext *s)
     // round up to a whole number of TS packets
     ts->pes_payload_size = (ts->pes_payload_size + 14 + 183) / 184 * 184 - 14;
 
-    ts->tsid = ts->transport_stream_id;
+    //ts->tsid = ts->transport_stream_id;
+    ts->tsid = ts->original_network_id;
     ts->onid = ts->original_network_id;
-    /* allocate a single DVB service */
+    /* allocate a single DVB service */ // Not anymore!
 
     title = av_dict_get(s->metadata, "service_name", NULL, 0);
     if (!title)
@@ -767,13 +836,42 @@ static int mpegts_write_header(AVFormatContext *s)
     provider = av_dict_get(s->metadata, "service_provider", NULL, 0);
     provider_name = provider ? provider->value : DEFAULT_PROVIDER_NAME;
 
-    for(i = 0;i < ts->final_nb_services; i++) {
-	    service = mpegts_add_service(ts, ts->service_id+i, provider_name, service_name);
-	
+	switch (ts->transmission_profile) {
+
+	case 1://One HD service and one LD service
+	default:
+		//First we calculate the HD service ID based on the network_ID, service type (0x0 for TV, 0x3 for 1-SEG) and program counter
+		calculated_HD_service_ID = 0x0000; //Initialization necessary?
+		calculated_HD_service_ID = ( ts->onid & 0x7FF ) << 5 | 0x0 << 3 | 0x0;
+
+	    service = mpegts_add_service(ts, calculated_HD_service_ID, provider_name, service_name);
 	    service->pmt.write_packet = section_write_packet;
 	    service->pmt.opaque = s;
 	    service->pmt.cc = 15;
-    }
+
+		calculated_LD_service_ID = 0x0000; //Initialization necessary?
+		calculated_LD_service_ID = ( ts->onid & 0x7FF ) << 5 | 0x3 << 3 | 0x1;
+
+		service = mpegts_add_service(ts, calculated_LD_service_ID, provider_name, service_name);
+		service->pmt.write_packet = section_write_packet;
+		service->pmt.opaque = s;
+		service->pmt.cc = 15;
+
+		ts->final_nb_services = 2;
+
+	case 2:
+
+	break;
+}
+
+
+//    for(i = 0;i < ts->final_nb_services; i++) {
+//	    service = mpegts_add_service(ts, ts->service_id+i, provider_name, service_name);
+//	
+//	    service->pmt.write_packet = section_write_packet;
+//	    service->pmt.opaque = s;
+//	    service->pmt.cc = 15;
+//    }
 
     av_log(s, AV_LOG_VERBOSE, "%d services created, expected %d services.\n", ts->nb_services, ts->final_nb_services);
 
