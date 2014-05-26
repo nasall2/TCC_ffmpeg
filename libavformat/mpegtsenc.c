@@ -859,7 +859,9 @@ static MpegTSService *mpegts_add_service(MpegTSWrite *ts,
     service = av_mallocz(sizeof(MpegTSService));
     if (!service)
         return NULL;
-    service->pmt.pid = ts->pmt_start_pid + ts->nb_services;
+	//Experimental modif to assign 1seg PMT PID according to NBR15608 item 27.4
+	//Indirectly, every service SID is modified, but since they never share the same program number, it remains unique
+    service->pmt.pid = 0x1FC8 + (sid & 0x03);
     service->sid = sid;
     service->provider_name = av_strdup(provider_name);
     service->name = av_strdup(name);

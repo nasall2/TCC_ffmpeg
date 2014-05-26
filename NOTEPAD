@@ -1,5 +1,1 @@
-Descritor TS Information está com o remote control ID errado
-
-PAT está com a TX network errada
-
-
+endres@anhangabau:~/ffmpeg_dirty/ffmpeg_sources/ffmpeg$ ./ffmpeg -i /var/src/rbs_HD.ts -i /var/src/rbs_LD.ts -t 30 -map 0:0 -map 1:0 -map 0:1 -map 1:1 -vcodec copy -acodec copy -mpegts_original_network_id 2730 -mpegts_area_code 2970 -mpegts_guard_interval 2 -mpegts_transmission_mode 2 -mpegts_physical_channel 20 -mpegts_virtual_channel 13 -mpegts_transmission_profile 1 -muxrate 17000000 -mpegts_flags latm -loglevel verbose -y /home/nethome/endres/2405.ts
