@@ -60,11 +60,14 @@ typedef struct MpegTSWrite {
     MpegTSSection pat; /* MPEG2 pat table */
     MpegTSSection nit; /* MPEG2 nit table */
     MpegTSSection sdt; /* MPEG2 sdt table context */
+    MpegTSSection tot; /* MPEG2 sdt table context */
     MpegTSService **services;
     int sdt_packet_count;
     int sdt_packet_period;
     int nit_packet_count;
     int nit_packet_period;
+	int tot_packet_count;
+    int tot_packet_period;
     int pat_packet_count;
     int pat_packet_period;
     int nb_services;
@@ -254,6 +257,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 /* we retransmit the SI info at this rate */
 #define SDT_RETRANS_TIME 500
 #define NIT_RETRANS_TIME 10 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
+#define TOT_RETRANS_TIME 10 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
 #define PAT_RETRANS_TIME 100
 #define PCR_RETRANS_TIME 20
 // TODO Add here the new tables retransmission rate
@@ -781,6 +785,34 @@ static void mpegts_write_nit(AVFormatContext *s)
                           data, q - data);
 }
 
+static void mpegts_write_tot(AVFormatContext *s)
+{
+    MpegTSWrite *ts = s->priv_data;
+    MpegTSService *service;
+    uint8_t section[1024], *q, *tot_length_ptr;
+    int i, val;
+	unsigned int tot_length;
+
+    q = section;
+    *q++ = TOT_TID;
+	tot_length_ptr = q;
+	q += 2; //Filled later
+
+    *q++ = 0; //UTC-3 byte#0;
+    *q++ = 0; //UTC-3 byte#1;
+    *q++ = 0; //UTC-3 byte#2;
+    *q++ = 0; //UTC-3 byte#3;
+    *q++ = 0; //UTC-3 byte#4;
+
+	//Descriptors...
+
+	//Section length field completion
+	tot_length = q - tot_length_ptr - 2 + 4;// From beggining of UTC-3 field up to end of CRC: variable (q-ptr-2) + CRC (+4)
+    put16(&tot_length_ptr, 0xB000 | tot_length); //number of bytes in the section after the two bytes of section_number
+
+    mpegts_write_section(&ts->tot, section, tot_len + 3); // Add to tot_len the 1byte TID and the 2byte (flags | section_length)
+}
+
 static MpegTSService *mpegts_add_service(MpegTSWrite *ts,
                                          int sid,
                                          const char *provider_name,
@@ -911,6 +943,11 @@ static int mpegts_write_header(AVFormatContext *s)
     ts->nit.write_packet = section_write_packet;
     ts->nit.opaque = s;
 
+    ts->tot.pid = TOT_PID;
+    ts->tot.cc = 15;
+    ts->tot.write_packet = section_write_packet;
+    ts->tot.opaque = s;
+
     pids = av_malloc(s->nb_streams * sizeof(*pids));
     if (!pids)
         return AVERROR(ENOMEM);
@@ -1004,10 +1041,14 @@ static int mpegts_write_header(AVFormatContext *s)
             (TS_PACKET_SIZE * 8 * 1000);
         ts->sdt_packet_period      = (ts->mux_rate * SDT_RETRANS_TIME) /
             (TS_PACKET_SIZE * 8 * 1000);
-	ts->nit_packet_period      = (ts->mux_rate * NIT_RETRANS_TIME) /
+		ts->nit_packet_period      = (ts->mux_rate * NIT_RETRANS_TIME) /
              (TS_PACKET_SIZE * 8 * 1000);
         ts->pat_packet_period      = (ts->mux_rate * PAT_RETRANS_TIME) /
             (TS_PACKET_SIZE * 8 * 1000);
+        ts->tot_packet_period      = (ts->mux_rate * TOT_RETRANS_TIME) /
+            (TS_PACKET_SIZE * 8 * 1000);
+
+
     //TODO Add something to new tables here.
 
         if(ts->copyts < 1)
@@ -1016,6 +1057,7 @@ static int mpegts_write_header(AVFormatContext *s)
         /* Arbitrary values, PAT/PMT will also be written on video key frames */
         ts->sdt_packet_period = 200;
         ts->nit_packet_period = 200;
+        ts->tot_packet_period = 200;
         ts->pat_packet_period = 40;
 	//TODO Add something to new tables here.
         if (pcr_st->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -1041,6 +1083,7 @@ static int mpegts_write_header(AVFormatContext *s)
     ts->pat_packet_count = ts->pat_packet_period-1;
     ts->sdt_packet_count = ts->sdt_packet_period-1;
     ts->nit_packet_count = ts->nit_packet_period-1;
+    ts->tot_packet_count = ts->tot_packet_period-1;
 
     if (ts->mux_rate == 1)
         av_log(s, AV_LOG_VERBOSE, "muxrate VBR, ");
@@ -1099,6 +1142,12 @@ static void retransmit_si_info(AVFormatContext *s, int force_pat)
     if (++ts->nit_packet_count == ts->nit_packet_period) {
         ts->nit_packet_count = 0;
         mpegts_write_nit(s);
+    }
+
+    av_log(s, AV_LOG_VERBOSE, "Entering retransmit si info, tot\n");
+    if (++ts->tot_packet_count == ts->tot_packet_period) {
+        ts->tot_packet_count = 0;
+        mpegts_write_tot(s);
     }
 
     if (++ts->pat_packet_count == ts->pat_packet_period || force_pat) {
@@ -1497,6 +1546,7 @@ static int mpegts_write_packet_internal(AVFormatContext *s, AVPacket *pkt)
         ts->pat_packet_count = ts->pat_packet_period - 1;
         ts->sdt_packet_count = ts->sdt_packet_period - 1;
         ts->nit_packet_count = ts->nit_packet_period - 1;
+        ts->tot_packet_count = ts->tot_packet_period - 1;
         ts->flags &= ~MPEGTS_FLAG_REEMIT_PAT_PMT;
     }
 
