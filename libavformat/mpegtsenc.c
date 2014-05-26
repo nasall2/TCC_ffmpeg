@@ -256,8 +256,8 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 
 /* we retransmit the SI info at this rate */
 #define SDT_RETRANS_TIME 500
-#define NIT_RETRANS_TIME 10 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
-#define TOT_RETRANS_TIME 10 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
+#define NIT_RETRANS_TIME 50 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
+#define TOT_RETRANS_TIME 100 //Arbitrary value, the brazilian standard requests the NIT to be send every 10 secs.
 #define PAT_RETRANS_TIME 100
 #define PCR_RETRANS_TIME 20
 // TODO Add here the new tables retransmission rate
@@ -362,10 +362,10 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
         AVStream *st = s->streams[i];
         MpegTSWriteStream *ts_st = st->priv_data;
 
-	av_log(s, AV_LOG_VERBOSE, "Stream SID: %d \t Service ID: %d\n", ts_st->service->sid, service->sid);
+	//av_log(s, AV_LOG_VERBOSE, "Stream SID: %d \t Service ID: %d\n", ts_st->service->sid, service->sid);
 	if( ts_st->service->sid == service->sid ) {
 
-	av_log(s, AV_LOG_VERBOSE, "SIDs match, adding this to PMT.\n");
+	//av_log(s, AV_LOG_VERBOSE, "SIDs match, adding this to PMT.\n");
 	
 	AVDictionaryEntry *lang = av_dict_get(st->metadata, "language", NULL,0);
         switch(st->codec->codec_id) {
@@ -406,7 +406,7 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
             stream_type = STREAM_TYPE_PRIVATE_DATA;
             break;
         }
-	av_log(s, AV_LOG_VERBOSE, "====Stream 0x%x type is 0x%x \n", i, stream_type);
+	//av_log(s, AV_LOG_VERBOSE, "====Stream 0x%x type is 0x%x \n", i, stream_type);
 
         if (q - data > sizeof(data) - 32)
             return AVERROR(EINVAL);
@@ -680,7 +680,7 @@ static void mpegts_write_nit(AVFormatContext *s)
 	ts_info_desc_length_ptr = q;
 	*q++; //length, filled later
 	*q++ = ts->virtual_channel; //remote control key id
-	av_log(s, AV_LOG_VERBOSE, "==== virtual channel : %d physical channel %d \n", ts->virtual_channel, ts->physical_channel);
+	//av_log(s, AV_LOG_VERBOSE, "==== virtual channel : %d physical channel %d \n", ts->virtual_channel, ts->physical_channel);
 	//length of ts name string, 6 bits | transmission type count, 2 bits
 	*q++ = strlen(DEFAULT_NETWORK_NAME) << 2 | 0x2;
 	memcpy(q, DEFAULT_NETWORK_NAME, strlen(DEFAULT_NETWORK_NAME));
@@ -690,12 +690,12 @@ static void mpegts_write_nit(AVFormatContext *s)
 		case 1:
 		default:
 			for(i = 0; i < ts->nb_services; i++) {
-				av_log(s, AV_LOG_VERBOSE, "==== service test fields: %x NW_ID:%x SVC_TYPE:%x PGM_NB:%x \n",
-					ts->services[i]->sid,
-					(( ts->services[i]->sid & 0xFFE0 ) >> 5 ),
-					(( ts->services[i]->sid & 0x18 ) >> 3 ),
-					(ts->services[i]->sid & 0x7 )
-				);
+			//	av_log(s, AV_LOG_VERBOSE, "==== service test fields: %x NW_ID:%x SVC_TYPE:%x PGM_NB:%x \n",
+			//		ts->services[i]->sid,
+			//		(( ts->services[i]->sid & 0xFFE0 ) >> 5 ),
+			//		(( ts->services[i]->sid & 0x18 ) >> 3 ),
+			//		(ts->services[i]->sid & 0x7 )
+			//	);
 				if( (ts->services[i]->sid & 0x18 >> 3 )) {//if true, is a 1-seg service
 					*q++ = 0xAF; //transmission type: 0xAF: C
 					*q++ = 0x01; //number of services of this transm. type
@@ -729,9 +729,10 @@ static void mpegts_write_nit(AVFormatContext *s)
 	//Fill Service list descriptor length
 	service_list_desc_length_ptr[0] = q - service_list_desc_length_ptr - 1;
 
-	for(i = 0; i < ts->nb_services; i++)
-		if( (ts->services[i]->sid & 0x18 >> 3 ) == 0x3 ) {//if true, is a 1-seg service
-			av_log(s, AV_LOG_VERBOSE, "1-seg Service detected, creating partial reception desriptor.\n", ts->nb_services, ts->final_nb_services);
+	for(i = 0; i < ts->nb_services; i++) {
+		//av_log(s, AV_LOG_VERBOSE, "==== 1-seg Service test: %x \n", (ts->services[i]->sid & 0x18) >> 3 );
+		if(((ts->services[i]->sid & 0x18) >> 3) == 0x3) {//if true, is a 1-seg service
+			//av_log(s, AV_LOG_VERBOSE, "==== 1-seg Service detected, creating partial reception desriptor.\n" );
 			// Partial Reception Descriptor
 			*q++ = 0xFB; //tag
 			part_rec_desc_length_ptr = q;
@@ -740,6 +741,7 @@ static void mpegts_write_nit(AVFormatContext *s)
 			//Fill  descriptor length
 			part_rec_desc_length_ptr[0] = q - part_rec_desc_length_ptr - 1;
 		}
+	}
 
 	//// Terrestrial System Delivery Descriptor
 	*q++ = 0xFA; //tag
@@ -781,7 +783,7 @@ static void mpegts_write_nit(AVFormatContext *s)
 	
 	
 	//Write the table
-	mpegts_write_section1(&ts->nit, NIT_TID, DEFAULT_NID, ts->tables_version, 0, 0,
+	mpegts_write_section1(&ts->nit, NIT_TID, ts->onid, ts->tables_version, 0, 0,
                           data, q - data);
 }
 
@@ -789,8 +791,8 @@ static void mpegts_write_tot(AVFormatContext *s)
 {
     MpegTSWrite *ts = s->priv_data;
     MpegTSService *service;
-    uint8_t section[1024], *q, *tot_length_ptr;
-    int i, val;
+    uint8_t section[1024], *q, *tot_length_ptr, *desc_len_ptr, *offset_desc_length_ptr;
+    int i, temp_val;
 	unsigned int tot_length;
 
     q = section;
@@ -798,19 +800,53 @@ static void mpegts_write_tot(AVFormatContext *s)
 	tot_length_ptr = q;
 	q += 2; //Filled later
 
-    *q++ = 0; //UTC-3 byte#0;
-    *q++ = 0; //UTC-3 byte#1;
-    *q++ = 0; //UTC-3 byte#2;
-    *q++ = 0; //UTC-3 byte#3;
-    *q++ = 0; //UTC-3 byte#4;
+    *q++ = 0xDD; //UTC-3 byte#0; year
+    *q++ = 0xE2; //UTC-3 byte#1; year
+    *q++ = 0x10; //UTC-3 byte#2; hour
+    *q++ = 0x20; //UTC-3 byte#3; min
+    *q++ = 0x30; //UTC-3 byte#4; sec
 
-	//Descriptors...
+	//Descriptors...	
+	desc_len_ptr = q;
+    q += 2;
+
+	//Local Time Offset Descriptor
+	*q++ = 0x58; //tag
+	offset_desc_length_ptr = q;
+	*q++; //length, filled later
+
+	*q++ = 'B'; //
+	*q++ = 'R'; //
+	*q++ = 'A'; //
+
+	*q++ = 0x03 << 2 | 0x2; //Country Region ID, 6bits | RSV 1bit = '1' | POLARITY 1bit
+	put16(&q, 0x0000);// Local Time Offset
+	
+	//Time of Change
+    *q++ = 0xDE; //UTC-3 byte#0; year
+    *q++ = 0x7B; //UTC-3 byte#0; year
+    *q++ = 0x00; //UTC-3 byte#0; hour
+    *q++ = 0x00; //UTC-3 byte#0; min
+    *q++ = 0x00; //UTC-3 byte#0; sec
+
+	put16(&q, 0x0100);// Next Time Offset
+
+	//Fill  descriptor length
+	offset_desc_length_ptr[0] = q - offset_desc_length_ptr - 1;
+
+	//Fill the descriptors length field
+	temp_val = 0xF0 << 8 | (q - desc_len_ptr - 2);
+	//av_log(s, AV_LOG_VERBOSE, "calculated length: %x %x %d \n", desc_len_ptr[0], desc_len_ptr[1], (q - desc_len_ptr - 2));
+	desc_len_ptr[0] = temp_val >> 8;
+	desc_len_ptr[1] = temp_val;
+
+
 
 	//Section length field completion
 	tot_length = q - tot_length_ptr - 2 + 4;// From beggining of UTC-3 field up to end of CRC: variable (q-ptr-2) + CRC (+4)
     put16(&tot_length_ptr, 0xB000 | tot_length); //number of bytes in the section after the two bytes of section_number
 
-    mpegts_write_section(&ts->tot, section, tot_len + 3); // Add to tot_len the 1byte TID and the 2byte (flags | section_length)
+    mpegts_write_section(&ts->tot, section, tot_length + 3); // Add to tot_len the 1byte TID and the 2byte (flags | section_length)
 }
 
 static MpegTSService *mpegts_add_service(MpegTSWrite *ts,
@@ -926,7 +962,7 @@ static int mpegts_write_header(AVFormatContext *s)
 //	    service->pmt.cc = 15;
 //    }
 
-    av_log(s, AV_LOG_VERBOSE, "%d services created, expected %d services.\n", ts->nb_services, ts->final_nb_services);
+    //av_log(s, AV_LOG_VERBOSE, "%d services created, expected %d services.\n", ts->nb_services, ts->final_nb_services);
 
     ts->pat.pid = PAT_PID;
     ts->pat.cc = 15; // Initialize at 15 so that it wraps and be equal to 0 for the first packet we write
@@ -1138,13 +1174,13 @@ static void retransmit_si_info(AVFormatContext *s, int force_pat)
         mpegts_write_sdt(s);
     }
     
-    av_log(s, AV_LOG_VERBOSE, "Entering retransmit si info, nit\n");
+    //av_log(s, AV_LOG_VERBOSE, "Entering retransmit si info, nit\n");
     if (++ts->nit_packet_count == ts->nit_packet_period) {
         ts->nit_packet_count = 0;
         mpegts_write_nit(s);
     }
 
-    av_log(s, AV_LOG_VERBOSE, "Entering retransmit si info, tot\n");
+    //av_log(s, AV_LOG_VERBOSE, "Entering retransmit si info, tot\n");
     if (++ts->tot_packet_count == ts->tot_packet_period) {
         ts->tot_packet_count = 0;
         mpegts_write_tot(s);
