@@ -559,6 +559,24 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
                 *q++ = 'a';
                 *q++ = 'c';
             }
+            if (stream_type == STREAM_TYPE_VIDEO_H264) {
+				av_log(s, AV_LOG_VERBOSE, "====Stream type is STREAM_TYPE_VIDEO_H264 \n");
+                *q++ = 0x52; /*MPEG-2 registration descriptor*/
+                *q++ = 0x01; /*MPEG-2 registration descriptor*/
+				if( (service->sid & 0x18 >> 3 )) {//if true, is a 1-seg service
+	                *q++ = 0x81; //1Seg Primary Video ES
+					av_log(s, AV_LOG_VERBOSE, "====1Seg Primary Video ES \n");
+				}
+				else {
+	                *q++ = 0x00; //Primary Video ES
+					av_log(s, AV_LOG_VERBOSE, "====Full Seg Primary Video ES \n");
+				}
+                *q++ = 0x06; /*MPEG-2 registration descriptor*/
+                *q++ = 0x01; /*MPEG-2 registration descriptor*/
+                *q++ = 0x02; /*MPEG-2 registration descriptor*/
+            }
+
+
             break;
         case AVMEDIA_TYPE_DATA:
             if (st->codec->codec_id == AV_CODEC_ID_SMPTE_KLV) {
@@ -609,7 +627,12 @@ static void mpegts_write_sdt(AVFormatContext *s)
         *q++ = 0x48;
         desc_len_ptr = q;
         q++;
+		if( (service->sid & 0x18 >> 3 )) {//if true, is a 1-seg service
+        *q++ = 0xC0; /* 1seg television service */
+		}
+		else {
         *q++ = 0x01; /* digital television service */
+		}
         putstr8(&q, service->provider_name);
         putstr8(&q, service->name);
         desc_len_ptr[0] = q - desc_len_ptr - 1;
@@ -935,7 +958,7 @@ static int mpegts_write_header(AVFormatContext *s)
 		calculated_HD_service_ID = 0x0000; //Initialization necessary?
 		calculated_HD_service_ID = ( ts->onid & 0x7FF ) << 5 | 0x0 << 3 | 0x0;
 
-	    service = mpegts_add_service(ts, calculated_HD_service_ID, provider_name, service_name);
+	    service = mpegts_add_service(ts, calculated_HD_service_ID, provider_name, "SVC HD Full Seg");
 	    service->pmt.write_packet = section_write_packet;
 	    service->pmt.opaque = s;
 	    service->pmt.cc = 15;
@@ -943,7 +966,7 @@ static int mpegts_write_header(AVFormatContext *s)
 		calculated_LD_service_ID = 0x0000; //Initialization necessary?
 		calculated_LD_service_ID = ( ts->onid & 0x7FF ) << 5 | 0x3 << 3 | 0x1;
 
-		service = mpegts_add_service(ts, calculated_LD_service_ID, provider_name, service_name);
+		service = mpegts_add_service(ts, calculated_LD_service_ID, provider_name, "SVC LD 1-Seg");
 		service->pmt.write_packet = section_write_packet;
 		service->pmt.opaque = s;
 		service->pmt.cc = 15;
