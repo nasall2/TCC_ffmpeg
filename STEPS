@@ -1,0 +1,17 @@
+Primeiro sintonizar com o tzap:
+	endres@anhangabau:~$ sudo tzap -r -c ~/channels.conf "tve rs hd"
+
+Depois capturar o numero de pacotes desejado com o dvbsnoop
+	endres@anhangabau:~/ffmpeg_clean/bin$ sudo dvbsnoop -n 500000 -b -s ts -tsraw > /var/src/0406-3.ts
+
+Analisar o arquivo capturado com o ffprobe para saber quais streams são video e áudio HD e 1Seg:
+	endres@anhangabau:~/ffmpeg_clean/bin$ ./ffprobe /var/src/0406-3.ts 
+
+Depois remultiplexar os streams HD e 1Seg em arquivos ts separados com o ffmpeg CLEAN e observar as taxas de bits para a multiplexação
+	endres@anhangabau:~/ffmpeg_clean/bin$ ./ffmpeg -i /var/src/0406-3.ts -map 0:0 -vcodec copy -map 0:1 -acodec copy -loglevel verbose -y /var/src/tve_HD_0406.ts
+	endres@anhangabau:~/ffmpeg_clean/bin$ ./ffmpeg -i /var/src/0406-3.ts -map 0:7 -vcodec copy -map 0:8 -acodec copy -loglevel verbose -y /var/src/tve_LD_0406.ts
+
+Depois multiplexar com o ffmpeg DIRTY, modificado, os ts com serviços individuais para criar o conforme a norma brasileira, cuidando para manter o arquivo HD antes do 1Seg e preencher a taxa total como a soma das taxas do HD e 1Seg arredondando para cima para caberem as tabelas no stream resultante
+	endres@anhangabau:~/ffmpeg_dirty/ffmpeg_sources/ffmpeg$ ./ffmpeg -i /var/src/tve_HD_0406.ts -i /var/src/tve_LD_0406.ts -map 0:0 -map 1:0 -map 0:1 -map 1:1 -vcodec copy -acodec copy -mpegts_original_network_id 0730 -mpegts_area_code 2970 -mpegts_guard_interval 3 -mpegts_transmission_mode 3 -mpegts_physical_channel 20 -mpegts_virtual_channel 1 -mpegts_transmission_profile 1 -muxrate 12000000 -mpegts_flags latm -loglevel verbose -y /home/nethome/endres/TVE_HD_LD_long.ts
+
+Passar para o StreamXpress, configurar os parametros de transmissao e tocar!

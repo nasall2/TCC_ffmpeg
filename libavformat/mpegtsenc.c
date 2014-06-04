@@ -560,16 +560,16 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
                 *q++ = 'c';
             }
             if (stream_type == STREAM_TYPE_VIDEO_H264) {
-				av_log(s, AV_LOG_VERBOSE, "====Stream type is STREAM_TYPE_VIDEO_H264 \n");
+				//av_log(s, AV_LOG_VERBOSE, "====Stream type is STREAM_TYPE_VIDEO_H264 \n");
                 *q++ = 0x52; /*MPEG-2 registration descriptor*/
                 *q++ = 0x01; /*MPEG-2 registration descriptor*/
 				if( (service->sid & 0x18 >> 3 )) {//if true, is a 1-seg service
 	                *q++ = 0x81; //1Seg Primary Video ES
-					av_log(s, AV_LOG_VERBOSE, "====1Seg Primary Video ES \n");
+					//av_log(s, AV_LOG_VERBOSE, "====1Seg Primary Video ES \n");
 				}
 				else {
 	                *q++ = 0x00; //Primary Video ES
-					av_log(s, AV_LOG_VERBOSE, "====Full Seg Primary Video ES \n");
+					//av_log(s, AV_LOG_VERBOSE, "====Full Seg Primary Video ES \n");
 				}
                 *q++ = 0x06; /*MPEG-2 registration descriptor*/
                 *q++ = 0x01; /*MPEG-2 registration descriptor*/
@@ -1063,6 +1063,11 @@ static int mpegts_write_header(AVFormatContext *s)
             ts_st->service->pcr_pid == 0x1fff) {
             ts_st->service->pcr_pid = ts_st->pid;
             pcr_st = st;
+			av_log(s, AV_LOG_VERBOSE, "ts_st->pid:%d ts_st->service->sid:%d ts_st->service->pcr_pid:%d\n",
+									ts_st->pid,
+									ts_st->service->sid,
+									ts_st->service->pcr_pid
+			);
         }
         if (st->codec->codec_id == AV_CODEC_ID_AAC &&
             st->codec->extradata_size > 0)
@@ -1086,11 +1091,13 @@ static int mpegts_write_header(AVFormatContext *s)
             if (ret < 0)
                 goto fail;
         }
-    }
+    }//Streams loop end.
 
     av_free(pids);
 
-    /* if no video stream, use the first stream as PCR */
+
+    /* if no video stream, use the first stream as PCR */ 
+	//TODO This part should be corrected, replace 'ts_st->service' with the services loop
     if (ts_st->service->pcr_pid == 0x1fff && s->nb_streams > 0) {
         pcr_st = s->streams[0];
         ts_st = pcr_st->priv_data;
@@ -1098,8 +1105,11 @@ static int mpegts_write_header(AVFormatContext *s)
     }
 
     if (ts->mux_rate > 1) {
-        ts_st->service->pcr_packet_period = (ts->mux_rate * PCR_RETRANS_TIME) /
-            (TS_PACKET_SIZE * 8 * 1000);
+		av_log(s, AV_LOG_VERBOSE, "Constant muxrate detected:%d bps", ts->mux_rate);
+	for(i = 0; i < ts->nb_services; i++) {
+        ts->services[i]->pcr_packet_period = (ts->mux_rate * PCR_RETRANS_TIME) / (TS_PACKET_SIZE * 8 * 1000);
+		av_log(s, AV_LOG_VERBOSE, "\tService ID:%d pcr_packet_period:%d\n",  ts->services[i]->sid, ts->services[i]->pcr_packet_period);
+	}
         ts->sdt_packet_period      = (ts->mux_rate * SDT_RETRANS_TIME) /
             (TS_PACKET_SIZE * 8 * 1000);
 		ts->nit_packet_period      = (ts->mux_rate * NIT_RETRANS_TIME) /
@@ -1114,7 +1124,8 @@ static int mpegts_write_header(AVFormatContext *s)
 
         if(ts->copyts < 1)
             ts->first_pcr = av_rescale(s->max_delay, PCR_TIME_BASE, AV_TIME_BASE);
-    } else {
+    } else { //Only enters here if muxrate is VBR
+		av_log(s, AV_LOG_VERBOSE, "Variable muxrate detected\n");
         /* Arbitrary values, PAT/PMT will also be written on video key frames */
         ts->sdt_packet_period = 200;
         ts->nit_packet_period = 200;
@@ -1140,7 +1151,14 @@ static int mpegts_write_header(AVFormatContext *s)
     }
 
     // output a PCR as soon as possible
-    ts_st->service->pcr_packet_count = ts_st->service->pcr_packet_period;
+	for(i = 0; i < ts->nb_services; i++) {
+		ts->services[i]->pcr_packet_count = ts->services[i]->pcr_packet_period;
+		av_log(s, AV_LOG_VERBOSE, "Service ID:%d pcr_packet_period:%d pcr_packet_count:%d\n",
+								ts->services[i]->sid,
+								ts->services[i]->pcr_packet_period,
+								ts->services[i]->pcr_packet_count
+		);
+	}
     ts->pat_packet_count = ts->pat_packet_period-1;
     ts->sdt_packet_count = ts->sdt_packet_period-1;
     ts->nit_packet_count = ts->nit_packet_period-1;
@@ -1348,15 +1366,19 @@ static void mpegts_write_pes(AVFormatContext *s, AVStream *st,
         force_pat = 0;
 
         write_pcr = 0;
+		av_log(s, AV_LOG_VERBOSE, "===Stream PID: %d \t Service PCR PID: %d \t", ts_st->pid, ts_st->service->pcr_pid);
         if (ts_st->pid == ts_st->service->pcr_pid) {
             if (ts->mux_rate > 1 || is_start) // VBR pcr period is based on frames
+				av_log(s, AV_LOG_VERBOSE, "pcr_packet_count: %d \t pcr_packet_period:%d\t", ts_st->service->pcr_packet_count,ts_st->service->pcr_packet_period);
                 ts_st->service->pcr_packet_count++;
             if (ts_st->service->pcr_packet_count >=
                 ts_st->service->pcr_packet_period) {
                 ts_st->service->pcr_packet_count = 0;
                 write_pcr = 1;
+				av_log(s, AV_LOG_VERBOSE, "write_pcr = 1");
             }
         }
+		av_log(s, AV_LOG_VERBOSE, "\n");
 
         if (ts->mux_rate > 1 && dts != AV_NOPTS_VALUE &&
             (dts - get_pcr(ts, s->pb)/300) > delay) {
